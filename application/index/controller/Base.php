@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by PhpStorm.
- * User: EDZ
+ * MiniUser: EDZ
  * Date: 2018/12/7
  * Time: 19:19
  */
@@ -15,8 +15,13 @@ class Base extends Controller{
     protected $param;
     protected $url_path = "";     //当前完全访问路径
 
+    /**
+     * 初始化验证
+     * 验证登录
+     * 验证权限
+     * 设置菜单
+     */
     public function _initialize() {
-
         $this->param = $this->request->param();
         $this->url_path = strtolower($this->request->module() . '/' . $this->request->controller() . '/' . $this->request->action());
 
@@ -26,7 +31,6 @@ class Base extends Controller{
         }
 
         if (!in_array($this->url_path, array('admin/index/login', 'admin/index/logout', 'admin/index/verify'))) {
-
             // 是否是超级管理员
             define('IS_ROOT', is_administrator());
             // 检测系统权限
@@ -53,7 +57,7 @@ class Base extends Controller{
                 }
             }
             //菜单设置
-            $this->setMenu();
+//            $this->setMenu();
         }
     }
 
@@ -102,8 +106,8 @@ class Base extends Controller{
      * @author 朱亚杰  <xcoolcc@gmail.com>
      */
     final protected function accessControl() {
-        $allow = \think\Config::get('allow_visit');
-        $deny  = \think\Config::get('deny_visit');
+        $allow = config('app.siteinfo.allow_visit');
+        $deny = config('app.siteinfo.deny_visit');
         $check = strtolower($this->request->controller() . '/' . $this->request->action());
         if (!empty($deny) && in_array_case($check, $deny)) {
             return false; //非超管禁止访问deny中的方法
@@ -124,7 +128,7 @@ class Base extends Controller{
         $where['pid']  = 0;
         $where['hide'] = 0;
         $where['type'] = 'admin';
-        if (!config('develop_mode')) {
+        if (!config('app.siteinfo.develop_mode')) {
             // 是否开发者模式
             $where['is_dev'] = 0;
         }

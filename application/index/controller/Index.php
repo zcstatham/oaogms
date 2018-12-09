@@ -3,13 +3,23 @@ namespace app\index\controller;
 
 class Index extends Base{
 
-    public function index()
-    {
-        return 'aaa';
+    /**
+     * 自有小程序列表
+     * 总用户趋势
+     * 总渠道导入量
+     * 总渠道导出量
+     * @return string
+     */
+    public function index() {
+        return $this->fetch();
     }
 
     /**
-     * @title 用户登录
+     * 账户登录
+     * @param string $username
+     * @param string $password
+     * @param string $verify
+     * @return mixed|void
      */
     public function login($username = '', $password = '', $verify = '') {
         if ($this->request->isPost()) {
@@ -21,20 +31,12 @@ class Index extends Base{
                 return $this->error('验证码错误！', '');
             }
 
-            $user = model('Admin');
+            $user = model('Account');
             $uid  = $user->login($username, $password);
-            if ($uid > 0) {
+            if ($uid) {
                 return $this->success('登录成功！', url('admin/index/index'));
             } else {
-                switch ($uid) {
-                    case -1:$error = '用户不存在或被禁用！';
-                        break; //系统级别禁用
-                    case -2:$error = '密码错误！';
-                        break;
-                    default:$error = '未知错误！';
-                        break; // 0-接口参数错误（调试阶段使用）
-                }
-                return $this->error($error, '');
+                return $this->error($error, '登录失败');
             }
         } else {
             return $this->fetch();
