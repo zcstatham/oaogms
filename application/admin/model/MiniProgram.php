@@ -6,7 +6,7 @@
  * Time: 21:38
  */
 
-namespace app\index\model;
+namespace app\admin\model;
 
 
 class MiniProgram extends Base

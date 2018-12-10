@@ -6,13 +6,13 @@
  * Time: 21:38
  */
 
-namespace app\index\model;
+namespace app\admin\model;
 use think\exception\ErrorException;
 
 
 /**
  * Class Account 渠道、运营、系统
- * @package app\index\model
+ * @package app\admin\model
  */
 class Account extends Base
 {

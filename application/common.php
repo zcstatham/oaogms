@@ -54,3 +54,10 @@ function is_administrator($uid = null)
     $uid = is_null($uid) ? is_login() : $uid;
     return $uid && (intval($uid) === config('user_administrator'));
 }
+
+function getToken() {
+    if(isset($_SERVER['HTTP_TOKEN'])){
+        return \Service\EncryptService::parseToken($_SERVER['HTTP_TOKEN']);
+    }
+    return null;
+}

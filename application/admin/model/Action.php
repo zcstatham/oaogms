@@ -6,7 +6,7 @@
  * Time: 21:37
  */
 
-namespace app\index\model;
+namespace app\admin\model;
 
 
 class Action extends Base

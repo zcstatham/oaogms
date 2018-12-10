@@ -6,7 +6,7 @@
  * Time: 21:35
  */
 
-namespace app\index\controller;
+namespace app\admin\controller;
 
 
 class Publice extends Base

@@ -5,7 +5,7 @@
  * Date: 2018/12/7
  * Time: 20:06
  */
-namespace app\common\model;
+namespace app\admin\model;
 
 
 class MiniUser extends Base {
