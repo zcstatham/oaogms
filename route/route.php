@@ -19,15 +19,15 @@ return [
     '__pattern__' => [
         'name' => '\w+',
     ],
-    '/'               => 'index/index/index',
+    '/'               => 'admin/index/index',
 
-    'publice/index'   => 'index/publice/index',
-    'publice/own'     => 'index/publice/own',
-    'publice/channel' => 'index/publice/channel',
+    'publice/index'   => 'admin/publice/index',
+    'publice/own'     => 'admin/publice/own',
+    'publice/channel' => 'admin/publice/channel',
 
-    'manager/index'   => 'index/manager/index',
-    'manager/own'     => 'index/manager/own',
-    'manager/channel' => 'index/manager/channel',
-    'manager/account' => 'index/manager/account',
+    'manager/index'   => 'admin/manager/index',
+    'manager/own'     => 'admin/manager/own',
+    'manager/channel' => 'admin/manager/channel',
+    'manager/account' => 'admin/manager/account',
 
 ];

@@ -7,6 +7,7 @@
  */
 
 namespace app\index\model;
+use think\exception\ErrorException;
 
 
 /**
@@ -27,7 +28,13 @@ class Account extends Base
      * 获取账户信息
      */
     private function getAccountInfo($uid){
-        $data = $this->where(array('uid'=>$uid))->find();
+        try{
+            $data = $this->where(array('uid'=>$uid))->find();
+
+        }catch (\Exception $e) {
+            // 这是进行异常捕获
+            return json($e->getMessage());
+        }
         return $data;
     }
 
