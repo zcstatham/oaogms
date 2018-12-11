@@ -15,6 +15,10 @@ use think\facade\Request;
 class Index extends controller
 {
 
+    protected $beforeActionList = [
+        'checkMethod'
+    ];
+
     private $data = [
         'code'=> 1,
         'data'=> []
@@ -77,6 +81,12 @@ class Index extends controller
     function wxPay()
     {
 
+    }
+
+    protected function checkMethod(){
+        if(!Request::isPost()){
+            $this->error('请求格式错误，请滚蛋');
+        }
     }
 
     function retErr($code='1000',$msg=''){
