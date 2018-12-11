@@ -15,7 +15,7 @@
 
 return [
     // 应用名称
-    'app_name'               => 'oaogms',
+    'app_name'               => '',
     // 应用地址
     'app_host'               => '',
     // 应用调试模式

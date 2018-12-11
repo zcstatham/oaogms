@@ -6,7 +6,7 @@
  * Time: 21:38
  */
 
-namespace app\admin\model;
+namespace app\common\model;
 use think\exception\ErrorException;
 
 
@@ -14,7 +14,7 @@ use think\exception\ErrorException;
  * Class Account 渠道、运营、系统
  * @package app\admin\model
  */
-class Account extends Base
+class SysAccount extends Base
 {
 
     /**

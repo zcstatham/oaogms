@@ -13,16 +13,14 @@ class wxLogin
     protected $appid;
     protected $appSecret;
     protected $wxhost = 'https://api.weixin.qq.com/sns/';
-    public function __construct($appid,$appSecret,$openid, $mch_id, $key){
+    public function __construct($appid,$appSecret){
         $this->appid = $appid;
         $this->appSecret = $appSecret;
-        $this->mch_id = $mch_id;
-        $this->key = $key;
     }
 
     public function wxLogin($code){
         $url = $this->wxhost.'jscode2session?appid'.$this->appid.'&secret='.$this->appSecret.'&js_code='.$code.'&grant_type=authorization_code';
-        return json_decode($this->curl_http($url),true);
+        return json_decode(curl_http($url),true);
     }
 
     public function wx_auth_sign($signature,$rawData,$encryptedData,$iv){

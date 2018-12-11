@@ -47,7 +47,7 @@ class Auth
     final protected function accessControl() {
         $allow = config('app.siteinfo.allow_visit');
         $deny = config('app.siteinfo.deny_visit');
-//        $check = strtolower($request->controller() . '/' . $this->request->action());
+        $check = strtolower($request->controller() . '/' . $this->request->action());
         if (!empty($deny) && in_array_case($check, $deny)) {
             return false; //非超管禁止访问deny中的方法
         }

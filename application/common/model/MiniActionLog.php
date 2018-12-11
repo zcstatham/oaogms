@@ -6,10 +6,10 @@
  * Time: 21:37
  */
 
-namespace app\admin\model;
+namespace app\common\model;
 
 
-class Action extends Base
+class MiniActionLog extends Base
 {
     /**
      * 获取渠道导出人次

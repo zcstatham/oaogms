@@ -6,10 +6,10 @@
  * Time: 21:37
  */
 
-namespace app\admin\model;
+namespace app\common\model;
 
 
-class Login extends Base
+class MiniLoginLog extends Base
 {
     /**
      * 获取访问次数
@@ -41,4 +41,7 @@ class Login extends Base
         return 'visitedUserCount';
     }
 
+    public function addLog($loginLog){
+        $this->save($loginLog);
+    }
 }
