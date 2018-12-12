@@ -71,7 +71,7 @@ class Base extends Controller{
     final protected function checkRule($rule, $type = AuthRule::rule_url, $mode = 'url') {
         static $Auth = null;
         if (!$Auth) {
-            $Auth = new \com\Auth();
+            $Auth = new \author\Auth();
         }
         if (!$Auth->check($rule, session('user_auth.uid'), $type, $mode)) {
             return false;
@@ -169,6 +169,10 @@ class Base extends Controller{
             }
         }
         $this->assign('__menu__', $menu);
+    }
+
+    protected function setMeta($title = '') {
+        $this->assign('meta_title', $title);
     }
 
     protected function getContentMenu() {

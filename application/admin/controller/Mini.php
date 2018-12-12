@@ -9,7 +9,7 @@
 namespace app\admin\controller;
 
 
-class Manager extends Base
+class Mini extends Base
 {
 
     public function index(){
@@ -21,7 +21,7 @@ class Manager extends Base
      * @return string
      */
     public function own(){
-        return Common/$this->own();
+        return own();
     }
 
     /**
@@ -30,14 +30,6 @@ class Manager extends Base
      */
     public function channel(){
         return 'channel';
-    }
-
-    /**
-     * 平台账户列表
-     * @return string
-     */
-    public function account(){
-        return 'account';
     }
 
     /**
@@ -82,42 +74,6 @@ class Manager extends Base
      * @return mixed
      */
     private function getMini($mid){
-        return $mid;
-    }
-
-    /**
-     * 新增账户
-     * @param $data
-     * @return mixed
-     */
-    private function addAccount($data){
-        return $data;
-    }
-
-    /**
-     * 修改账户
-     * @param $mid
-     * @return mixed
-     */
-    private function editAccount($mid){
-        return $mid;
-    }
-
-    /**
-     * 删除账户
-     * @param $mid
-     * @return mixed
-     */
-    private function delAccount($mid){
-        return $mid;
-    }
-
-    /**
-     * 查询账户
-     * @param $mid
-     * @return mixed
-     */
-    private function getAccount($mid){
         return $mid;
     }
 }

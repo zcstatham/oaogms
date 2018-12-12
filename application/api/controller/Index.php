@@ -10,13 +10,14 @@ namespace app\api\controller;
 
 
 use think\Controller;
+use think\Db;
 use think\facade\Request;
 
 class Index extends controller
 {
 
     protected $beforeActionList = [
-        'checkMethod'
+        'checkDate'
     ];
 
     private $data = [
@@ -39,7 +40,7 @@ class Index extends controller
             $uInfo = Request::post('info');
             $uInfo['ip'] = $ip;
             if (!$mInfo) {
-                return $this->retErr('2001');
+                return json_error_return('2001');
             }
             $uid = model('user')->login(Request::post('code'), $uInfo, $mInfo,$now);
             $token = \encrypt\EncryptService::createToken(
@@ -51,7 +52,7 @@ class Index extends controller
         }
         $tokenInfo = \encrypt\EncryptService::checkToken($token);
         if($tokenInfo['code'] != '200'){
-            return $this->retErr('1002');
+            return json_error_return('1002');
         }
         if (Request::has('type')) {
             $type = Request::param('type');
@@ -76,6 +77,7 @@ class Index extends controller
             $this->data['data'] = '登录成功';
             return $this->data;
         }
+        return json_error_return('1003');
     }
 
     function wxPay()
@@ -83,18 +85,7 @@ class Index extends controller
 
     }
 
-    protected function checkMethod(){
-        if(!Request::isPost()){
-            $this->error('请求格式错误，请滚蛋');
-        }
-    }
+    protected function checkDate(){
 
-    function retErr($code='1000',$msg=''){
-        $msg = $msg?:config('app.siteinfo.error_code'.$code);
-        $this->data = array(
-            'code' =>$code,
-            'data'=> $msg
-        );
-        return $this->data;
     }
 }

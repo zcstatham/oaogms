@@ -32,10 +32,13 @@ Route::domain('admin',function() {
         'publice/own'     => 'admin/publice/own',
         'publice/channel' => 'admin/publice/channel',
 
-        'manager/index'   => 'admin/manager/index',
-        'manager/own'     => 'admin/manager/own',
-        'manager/channel' => 'admin/manager/channel',
-        'manager/account' => 'admin/manager/account',
+        'mini/index'   => 'admin/mini/index',
+        'mini/own'     => 'admin/mini/own',
+        'mini/channel' => 'admin/mini/channel',
+
+        'admin/index' => 'admin/admin/index',
+        'admin/group' => 'admin/admin/group',
+        'admin/auth' => 'admin/admin/auth',
     ])->middleware('Auth');
     Route::group('checkToken',[
         '/login'   => 'admin/index/login',
