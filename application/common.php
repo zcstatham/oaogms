@@ -10,6 +10,7 @@
 // +----------------------------------------------------------------------
 
 // 应用公共文件
+use think\facade\Config;
 
 /**
  * 检测用户是否登录
@@ -84,13 +85,13 @@ function strcode($string, $action = 'encode') {
     return ($action != 'decode' ? base64_encode($code) : $code);
 }
 
-function json_error_return($code, $msg=''){
-    $msg = $msg?:config('app.siteinfo.error_code'.$code);
-    $data = array(
-        'code' =>$code,
-        'data'=> $msg
-    );
-    return $data;
+function json_error_exception($code = '',$msg = '')
+{
+    $error       = config('app.siteinfo.error_code');
+    $errorCode  = isset($error[$code]) ? $code : 1000;
+    $errorMsg   = $msg != '' ? (isset($error[$code]) ?  $error[$code]." :".$msg : $msg) : (isset($error[$code]) ?  $error[$code] : "请求错误");
+    header("Content-type: application/json;");
+    echo  json_encode(array('code'=>$errorCode,'msg'=>$errorMsg));exit;
 }
 
 

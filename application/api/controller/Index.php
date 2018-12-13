@@ -40,7 +40,7 @@ class Index extends controller
             $uInfo = Request::post('info');
             $uInfo['ip'] = $ip;
             if (!$mInfo) {
-                return json_error_return('2001');
+                json_error_exception('2001');
             }
             $uid = model('user')->login(Request::post('code'), $uInfo, $mInfo,$now);
             $token = \encrypt\EncryptService::createToken(
@@ -52,7 +52,7 @@ class Index extends controller
         }
         $tokenInfo = \encrypt\EncryptService::checkToken($token);
         if($tokenInfo['code'] != '200'){
-            return json_error_return('1002');
+            json_error_exception('1002');
         }
         if (Request::has('type')) {
             $type = Request::param('type');
@@ -77,7 +77,7 @@ class Index extends controller
             $this->data['data'] = '登录成功';
             return $this->data;
         }
-        return json_error_return('1003');
+        json_error_exception('1003');
     }
 
     function wxPay()

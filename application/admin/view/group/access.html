@@ -1,0 +1,134 @@
+{extend name="public/base" /}
+{block name="style"}
+<!-- Core stylesheets -->
+<link rel="stylesheet" href="__CSS__/ui-elements/button.css">
+<style>
+    .table td, .table th {
+        vertical-align: middle;
+        text-align: center;
+        overflow: auto;
+    }
+
+    .btn.focus, .btn:focus{
+        outline: 0;
+        box-shadow: initial;
+    }
+
+    .table .btn{
+        width: auto;
+        margin: 0;
+        font-size: 0.9rem;
+        line-height: initial;
+        border-radius: 5px;
+    }
+</style>
+{/block}
+{block name="body"}
+<div class="page-content d-flex align-items-stretch">
+    <!--***** SIDE NAVBAR *****-->
+    <nav class="side-navbar">
+        <div class="sidebar-header d-flex align-items-center">
+            <div class="avatar"><img src="__IMG__/avatar-1.jpg" alt="..." class="img-fluid rounded-circle"></div>
+            <div class="title">
+                <h1 class="h4">Steena Ben</h1>
+            </div>
+        </div>
+        <hr>
+        <!-- Sidebar Navidation Menus-->
+        <ul class="list-unstyled">
+            <li class="active"><a href="access.html"><i class="icon-home"></i>Home</a></li>
+            <li><a href="#apps" aria-expanded="false" data-toggle="collapse"> <i class="icon-interface-windows"></i>Apps
+            </a>
+                <ul id="apps" class="collapse list-unstyled">
+                    <li><a href="calendar.html">Calendar</a></li>
+                    <li><a href="email.html">Email</a></li>
+                    <li><a href="media.html">Media</a></li>
+                    <li><a href="invoice.html">Invoice</a></li>
+                </ul>
+            </li>
+            <li><a href="chart.html"> <i class="fa fa-bar-chart"></i>Chart </a></li>
+            <li><a href="#forms" aria-expanded="false" data-toggle="collapse"> <i class="fa fa-building-o"></i>Forms
+            </a>
+                <ul id="forms" class="collapse list-unstyled">
+                    <li><a href="basic-form.html">Basic Form</a></li>
+                    <li><a href="form-layouts.html">Form Layouts</a></li>
+                </ul>
+            </li>
+            <li><a href="maps.html"> <i class="fa fa-map-o"></i>Maps </a></li>
+            <li><a href="#pages" aria-expanded="false" data-toggle="collapse"> <i class="fa fa-file-o"></i>Pages </a>
+                <ul id="pages" class="collapse list-unstyled">
+                    <li><a href="faq.html">FAQ</a></li>
+                    <li><a href="empty.html">Empty</a></li>
+                    <li><a href="gallery.html">Gallery</a></li>
+                    <li><a href="login.html">Log In</a></li>
+                    <li><a href="register.html">Register</a></li>
+                    <li><a href="search-result.html">Search Result</a></li>
+                    <li><a href="404.html">404</a></li>
+                </ul>
+            </li>
+            <li><a href="tables.html"> <i class="icon-grid"></i>Tables </a></li>
+            <li><a href="#elements" aria-expanded="false" data-toggle="collapse"> <i class="fa fa-globe"></i>UI Elements
+            </a>
+                <ul id="elements" class="collapse list-unstyled">
+                    <li><a href="ui-buttons.html">Buttons</a></li>
+                    <li><a href="ui-cards.html">Cards</a></li>
+                    <li><a href="ui-progressbars.html">Progress Bar</a></li>
+                    <li><a href="ui-timeline.html">Timeline</a></li>
+                </ul>
+            </li>
+        </ul>
+        <span class="heading">Extras</span>
+        <ul class="list-unstyled">
+            <li><a href="#"> <i class="icon-picture"></i>Demo </a></li>
+        </ul>
+    </nav>
+
+    <div class="content-inner">
+        <div class="content-inner chart-cont">
+            <!--***** CONTENT *****-->
+            <div class="top-option third-button container">
+                <a href="{:url('admin/group/updatanode', 'type=admin')}" class="btn btn-outline-primary">+ 更新节点</a>
+            </div>
+            <hr>
+            <div class="container">
+                <table class="table table-hover">
+                    <thead>
+                    <tr class="bg-info text-white">
+                        <th>序号</th>
+                        <th>模块</th>
+                        <th>节点</th>
+                        <th>节点名称</th>
+                        <th>节点类型</th>
+                        <th>节点状态</th>
+                        <th>操作</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {volist name='list' id='item' key="index" }
+                    <tr class="table-{/*$index%2==0?'info':'success'*/}">
+                        <th scope="row">{$index}</th>
+                        <td>{$item.module}</td>
+                        <td>{$item.title}</td>
+                        <td>{$item.name}</td>
+                        <td>{$item.type == 1? 'url':'主菜单'}</td>
+                        <td class="first-button">
+                            {if $item.status == '1'}
+                            <a href="{:url('admin/group/editNodeStatus', array('id'=>$item['id'],'status'=>0))}" class="btn btn-link red">禁用</a>
+                            {else /}
+                            <a href="{:url('admin/group/editNodeStatus', array('id'=>$item['id'],'status'=>1))}" class="btn btn-link blue">启用</a>
+                            {/if}
+                        </td>
+                        <td class="first-button">
+                            <a href="{:url('admin/group/editnode',array('id'=>$item['id']))}" class="btn btn-link blue">编辑</a>
+                            <a href="{:url('admin/group/delnode', array('id'=>$item['id']))}" class="btn btn-link blue">删除</a>
+                        </td>
+                    </tr>
+                    {/volist}
+                    </tbody>
+                </table>
+                {$page}
+            </div>
+        </div>
+    </div>
+</div>
+{/block}

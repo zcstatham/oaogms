@@ -11,7 +11,7 @@ class Check
     public function handle(Request $request, \Closure $next)
     {
         if(!$request->isPost()){
-            return Response::create(json_error_return('1001'),'json');
+            json_error_exception('1001');
         }
         $jwt = new EncryptService();
         $checkToken = $jwt->checkToken($request->header('token'));

@@ -1,0 +1,61 @@
+{switch name="type"}
+	{case value="readonly"}
+		<input type="text" class="form-control" name="{$field}" id="{$field}" value="{$value}" autocomplete="false" readonly>
+	{/case}
+	{case value="num"}
+		<input type="text" class="form-control" name="{$field}" id="{$field}" autocomplete="false" value="{$value}">
+	{/case}
+	{case value="decimal"}
+		<input type="text" class="form-control" name="{$field}" id="{$field}" autocomplete="false" value="{$value}">
+	{/case}
+	{case value="text"}
+		<input type="text" class="form-control" name="{$field}" id="{$field}" autocomplete="false" value="{$value}">
+	{/case}
+	{case value="password"}
+		<input type="password" class="form-control" name="{$field}" id="{$field}" autocomplete="false" value="{$value}">
+	{/case}
+	{case value="textarea"}
+		<textarea class="form-control" name="{$field}" id="{$field}" rows="3">{$value}</textarea>
+	{/case}
+	{case value="select"}
+		<select class="custom-select mb-2 mr-sm-2 mb-sm-0" name="{$field}" id="{$field}" >
+			{volist name="option" id="item"}
+				<option value="{$key}" {if condition="$key eq $value"}selected{/if}>{$item}</option>
+			{/volist}
+		</select>
+	{/case}
+	{case value="bool"}
+		<select class="custom-select mb-2 mr-sm-2 mb-sm-0" name="{$field}" id="{$field}">
+			{volist name="option" id="item"}
+			<option value="{$key}" {if condition="$key eq $value"}selected{/if}>{$item}</option>
+			{/volist}
+		</select>
+	{/case}
+	{case value="bind"}
+		<select class="custom-select mb-2 mr-sm-2 mb-sm-0" name="{$field}" id="{$field}">
+			{volist name="option" id="item"}
+			<option value="{$key}" {if condition="$key eq $value"}selected{/if}>{$item}</option>
+			{/volist}
+		</select>
+	{/case}
+	{case value="checkbox"}
+		{php}$value = isset($value) && is_array($value) ? $value : array();{/php}
+		{volist name="option" id="item"}
+		<label class="custom-control custom-checkbox mb-2 mr-sm-2 mb-sm-0">
+			<input type="checkbox" class="custom-control-input" name="{$field}[]" id="{$field}-{$key}" value="{$key}" {if in_array($key, $value)}checked{/if}/>
+			<span class="custom-control-indicator"></span>
+			<span class="custom-control-description">{$item}</span>
+		</label>
+		{/volist}
+	{/case}
+	{case value="radio"}
+		{php}$value = isset($value) ? $value : 1;{/php}
+		{volist name="option" id="item"}
+			<label class="custom-control custom-radio mb-2 mr-sm-2 mb-sm-0">
+				<input class="custom-control-input" type="radio" name="{$field}" id="{$field}-{$key}" value="{$key}" {if condition="$key eq $value"}checked{/if}/>
+				<span class="custom-control-indicator"></span>
+				<span class="custom-control-description">{$item}</span>
+			</label>
+		{/volist}
+	{/case}
+{/switch}

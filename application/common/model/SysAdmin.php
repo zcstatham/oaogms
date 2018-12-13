@@ -228,8 +228,10 @@ class SysAdmin extends Base
     private function editPassword($data, $is_reset = false)
     {
         $sid = $is_reset ? $data['sid'] : session('user_auth.sid');
-        if (!$is_reset) {
-            return $this->checkPassword($sid, $data['oldpassword']);
+        if (!$is_reset && !($checkPass = $this->checkPassword($sid, $data['oldpassword']))) {
+            return false;
+        }else if($is_reset){
+            $data['password'] = '123456';
         }
         $data['salt'] = rand_string(6);
         return $this->save($data, array('sid' => $sid));

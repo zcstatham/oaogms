@@ -4,7 +4,7 @@ namespace app\admin\controller;
 class Index extends Base{
 
     /**
-     * 自有小程序列表
+     * @title 自有小程序列表
      * 总用户趋势
      * 总渠道导入量
      * 总渠道导出量
@@ -15,7 +15,7 @@ class Index extends Base{
     }
 
     /**
-     * 账户登录
+     * @title 账户登录
      * @param string $username
      * @param string $password
      * @param string $verify
@@ -24,7 +24,7 @@ class Index extends Base{
     public function login($username = '', $password = '', $verify = '') {
         if ($this->request->isPost()) {
             if (!$username || !$password) {
-                return $this->error('用户名或者密码不能为空！', '');
+                $this->error('用户名或者密码不能为空！', '');
             }
             //验证码验证
             if(!captcha_check($verify)){
@@ -45,11 +45,9 @@ class Index extends Base{
 
     /**
      * @title 后台退出
-     * @return html
      */
-    public function logout() {
-        $user = model('Member');
-        $user->logout();
+    public function logout(){
+        model('SysAdmin')->logout();
         $this->redirect('admin/index/login');
     }
 }

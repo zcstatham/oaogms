@@ -18,8 +18,8 @@ class SysAdmin extends Base
     ];
 
     /**
-     * 平台用户列表
-     * @return string
+     * @title 用户列表
+     * @return mixed
      */
     public function index(){
         $param = $this->request->param();
@@ -39,9 +39,9 @@ class SysAdmin extends Base
     }
 
     /**
-     * 新增账户
+     * @title 新增用户
      * @param $data
-     * @return mixed
+     * @return bool|mixed
      */
     private function addUser($data){
         if ($this->request->isPost()) {
@@ -61,17 +61,17 @@ class SysAdmin extends Base
             $this->setMeta("添加用户");
             return $this->fetch('public/edit');
         }
+        return false;
     }
 
     /**
-     * 修改账户
+     * @title 修改用户
      * @param $mid
-     * @return mixed
+     * @return bool|mixed
      */
     private function editUser($mid){
         if ($this->request->isPost()) {
             $data = $this->request->post();
-
             $reuslt = $this->model->editInfo($data, true);
 
             if (false !== $reuslt) {
@@ -92,26 +92,100 @@ class SysAdmin extends Base
             $this->setMeta("编辑用户");
             return $this->fetch('public/edit');
         }
+        return false;
     }
 
     /**
-     * 删除账户
-     * @param $mid
-     * @return mixed
+     * @title 更新用户状态
+     * @return bool
      */
-    private function delUser($mid){
-        return $mid;
+    private function delUser(){
+        if ($this->request->isPost()) {
+            $data = $this->request->post();
+            $reuslt = $this->model->editInfo($data, true);
+
+            if (false !== $reuslt) {
+                $this->success('修改成功！', url('admin/user/index'));
+            } else {
+                $this->error('修改失败');
+            }
+        } else {
+            $this->error('修改失败');
+        }
+        return false;
     }
 
     /**
-     * 授权账户
+     * @title 重置密码
+     * @return bool
+     */
+    private function resetPass(){
+        if ($this->request->isPost()) {
+            $data = $this->request->post();
+            $reuslt = $this->model->editPassword($data, true);
+            if (false !== $reuslt) {
+                $this->success('修改成功！', url('admin/user/index'));
+            } else {
+                $this->error('修改失败');
+            }
+        } else {
+            $this->error('修改失败');
+        }
+        return false;
+    }
+
+    /**
+     * @title 账户授权
      * @param $mid
-     * @return mixed
+     * @return bool|mixed
+     * @throws \Exception
+     * @throws \think\db\exception\DataNotFoundException
+     * @throws \think\db\exception\ModelNotFoundException
+     * @throws \think\exception\DbException
      */
     private function authUser($mid){
-        return $mid;
+        $access = model('AuthGroupAccess');
+        $group  = model('AuthGroup');
+        if ($this->request->isPost()) {
+            $uid = input('uid', '', 'trim,intval');
+            $access->where('uid', $uid)->delete();
+            $group_id = input('gid', '', 'trim,intval');
+            if ($group_id) {
+                $add = array(
+                    'uid'      => $uid,
+                    'group_id' => $group_id,
+                );
+                $access->save($add);
+            }
+            $this->success("设置成功！");
+        } else {
+            $uid  = input('id', '', 'trim,intval');
+            $row  = $group->all();
+            $auth = $access->where(array('uid' => $uid))->select();
+            $auth_list = array();
+            foreach ($auth as $key => $value) {
+                $auth_list[] = $value['group_id'];
+            }
+            foreach ($row as $key => $value) {
+                $list[$value['module']][] = $value;
+            }
+            $data = array(
+                'uid'       => $uid,
+                'auth_list' => $auth_list,
+                'list'      => $list,
+            );
+            $this->assign($data);
+            $this->setMeta("用户分组");
+            return $this->fetch();
+        }
+        return false;
     }
 
+    /**
+     * @title 获取用户信息
+     * @param null $uid
+     * @return mixed
+     */
     private function getUserinfo($uid = null) {
         $uid  = $uid ? : input('id');
         //如果无UID则修改当前用户
@@ -119,57 +193,6 @@ class SysAdmin extends Base
         return $this->model->get($uid);
     }
 
-    /**
-     * 新增用户组
-     * @param $data
-     * @return mixed
-     */
-    private function addUserGroup($data){
-        return $data;
-    }
-
-    /**
-     * 修改用户组
-     * @param $mid
-     * @return mixed
-     */
-    private function editUserGroup($mid){
-        return $mid;
-    }
-
-    /**
-     * 删除用户组
-     * @param $mid
-     * @return mixed
-     */
-    private function delUserGroup($mid){
-        return $mid;
-    }
-
-    /**
-     * 授权用户组
-     * @param $mid
-     * @return mixed
-     */
-    private function authUserGroup($mid){
-        return $mid;
-    }
-
-    private function authList(){
-
-    }
-
-    private function addAuth(){
-
-    }
-
-    private function editAuth(){
-
-    }
-
-    private function delAuth(){
-
-    }
     protected function beforeMethod()
     {
         $this->model = model('SysAdmin');
