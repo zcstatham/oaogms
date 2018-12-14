@@ -23,7 +23,7 @@ function is_login()
     if (empty($user)) {
         return 0;
     } else {
-        return session('user_auth_sign') == data_auth_sign($user) ? $user['uid'] : 0;
+        return session('user_auth_sign') == data_auth_sign($user) ? $user['sid'] : 0;
     }
 }
 
@@ -53,7 +53,7 @@ function data_auth_sign($data)
 function is_administrator($uid = null)
 {
     $uid = is_null($uid) ? is_login() : $uid;
-    return $uid && (intval($uid) === config('user_administrator'));
+    return $uid && (intval($uid) === (int)config('siteinfo.user_administrator'));
 }
 
 /**
@@ -87,7 +87,7 @@ function strcode($string, $action = 'encode') {
 
 function json_error_exception($code = '',$msg = '')
 {
-    $error       = config('app.siteinfo.error_code');
+    $error       = config('siteinfo.error_code');
     $errorCode  = isset($error[$code]) ? $code : 1000;
     $errorMsg   = $msg != '' ? (isset($error[$code]) ?  $error[$code]." :".$msg : $msg) : (isset($error[$code]) ?  $error[$code] : "请求错误");
     header("Content-type: application/json;");
@@ -183,4 +183,32 @@ function rand_string($len = 6, $type = '', $addChars = '') {
 
 function get_client_ip(){
     return request()->ip();
+}
+
+/**
+ * 检查权限
+ * @param $rule
+ * @param int $type
+ * @param string $mode
+ * @return bool
+ */
+function checkRule($rule, $type = 1, $mode = 'url') {
+    static $Auth = null;
+    if (!$Auth) {
+        $Auth = new \author\Auth();
+    }
+    if (!$Auth->check($rule, session('user_auth.uid'), $type, $mode)) {
+        return false;
+    }
+    return true;
+}
+
+/**
+ * 不区分大小写的in_array实现
+ * @param $value
+ * @param $array
+ * @return bool
+ */
+function in_array_case($value, $array) {
+    return in_array(strtolower($value), array_map('strtolower', $array));
 }

@@ -13,7 +13,6 @@ use think\facade\Env;
 
 class AuthRule extends Base
 {
-
     protected $autoWriteTimestamp = false;
 
     public $filter_method = array('__construct', 'execute', 'login', 'sqlSplit', 'isMobile', 'is_wechat', '_initialize');

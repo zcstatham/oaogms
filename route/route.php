@@ -16,7 +16,7 @@
 use think\facade\Route;
 
 Route::domain('api',function() {
-    Route::group('checkToken',[
+    Route::group('',[
         '/wxpay/notify'    	   => 'api/index/wxpay?type=notify', //订单回调
         '/index/advertisement' => ['api/home/advertisement', ['method' => 'post']], //获取广告
     ])->middleware('Check');
@@ -25,7 +25,7 @@ Route::domain('api',function() {
 
 
 Route::domain('admin',function() {
-    Route::group('checkToken',[
+    Route::group('',[
         '/'               => 'admin/index/index',
 
         'publice/index'   => 'admin/publice/index',
@@ -40,12 +40,13 @@ Route::domain('admin',function() {
         'admin/group' => 'admin/admin/group',
         'admin/auth' => 'admin/admin/auth',
     ])->middleware('Auth');
-    Route::group('checkToken',[
+
+    Route::group('',[
         '/login'   => 'admin/index/login',
         '/logout'     => 'admin/index/logout',
         '/verify' => 'admin/index/verify',
     ]);
-})->method('post');
+});
 
 //return [
 //    '__pattern__' => [

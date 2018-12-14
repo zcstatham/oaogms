@@ -13,7 +13,6 @@ use think\Model;
 
 class Base extends Model
 {
-
     protected $autoWriteTimestamp = 'datetime';
     protected $updateTime = 'last_login_timestamp';
     protected $createTime = 'create_timestamp';

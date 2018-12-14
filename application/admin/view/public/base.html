@@ -1,4 +1,8 @@
 {include file="admin@public/header" /}
+<!-- Core stylesheets -->
+<link rel="stylesheet" href="__CSS__/ui-elements/card.css">
+<link rel="stylesheet" href="__CSS__/style.css">
+
 <style>
     .top-option .btn {
         margin: 0;
@@ -6,6 +10,17 @@
         line-height: initial;
         padding: 0.8rem 1.5rem;
         font-weight: 500;
+    }
+    nav.navbar .menu-btn.active {
+         height: auto;
+    }
+
+    .navbar-main li a {
+        border-bottom: 2px solid transparent;
+    }
+
+    .navbar-main .active a, .navbar-main li:hover a {
+        border-bottom-color: #EEF5F9;
     }
 </style>
 {block name="style"}{/block}

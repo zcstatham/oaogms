@@ -88,6 +88,7 @@
             <!--***** CONTENT *****-->
             <div class="top-option third-button container">
                 <a href="{:url('admin/group/updatanode', 'type=admin')}" class="btn btn-outline-primary">+ 更新节点</a>
+                <a href="{:url('admin/group/addnode', 'type=admin')}" class="btn btn-outline-primary">+ 添加节点</a>
             </div>
             <hr>
             <div class="container">
@@ -126,7 +127,7 @@
                     {/volist}
                     </tbody>
                 </table>
-                {$page}
+                {$page|raw}
             </div>
         </div>
     </div>

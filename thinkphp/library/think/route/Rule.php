@@ -722,17 +722,13 @@ abstract class Rule
 
         // 替换路由地址中的变量
         if (is_string($route) && !empty($matches)) {
-            $search = $replace = [];
-
-            foreach ($matches as $key => $value) {
-                $search[]  = '<' . $key . '>';
-                $replace[] = $value;
-
-                $search[]  = ':' . $key;
-                $replace[] = $value;
+            foreach ($matches as $key => $val) {
+                if (false !== strpos($route, '<' . $key . '>')) {
+                    $route = str_replace('<' . $key . '>', $val, $route);
+                } elseif (false !== strpos($route, ':' . $key)) {
+                    $route = str_replace(':' . $key, $val, $route);
+                }
             }
-
-            $route = str_replace($search, $replace, $route);
         }
 
         // 解析额外参数

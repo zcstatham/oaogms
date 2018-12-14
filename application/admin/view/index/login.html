@@ -1,10 +1,101 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Title</title>
+{include file="admin@public/header" /}
+    <!-- Core stylesheets -->
+    <link rel="stylesheet" href="__CSS__/pages/login.css">
+    <style>
+        .contact-h-cont {
+            border-radius: 6px;
+        }
+    </style>
 </head>
 <body>
+<!--====================================================
+                        PAGE CONTENT
+======================================================-->
+<section class="hero-area">
+    <div class="overlay"></div>
+    <div class="container">
+        <div class="row">
+            <div class="col-md-12 ">
+                <div class="contact-h-cont">
+                    <h3 class="text-center"><img src="__IMG__/logo.png" class="img-fluid" alt=""></h3><br>
+                    <form method="post">
+                        <div class="form-group">
+                            <label for="username">Username</label>
+                            <input  required pattern="^\S{4,}$" type="text" class="form-control" name="username" id="username" title="请输入4位及以上的字符" placeholder="Enter Username">
+                        </div>
+                        <div class="form-group">
+                            <label for="password">Password</label>
+                            <input required pattern="^\S{4,}$" class="form-control" type="password" name="password" title="请输入4位及以上的字符" id="password"  placeholder="Enter Password">
+                        </div>
+                        <div class="verify-box">
+                            <label for="password">Verify Code</label>
+                            <div class="row">
+                                <div class="form-group col-md-6">
+                                    <input class="form-control" required pattern="^\S{3,}$" name="verify" value=""
+                                           type="text" autocomplete="off" title="请输入3位及以上的字符"
+                                           placeholder="Enter Verify Code">
+                                </div>
+                                <div class="form-group col-md-6">
+                                    <span class="reloadverify" style="cursor:pointer"><img src="{:captcha_src()}" alt="captcha" height="38"></span>
+                                </div>
+                            </div>
+                        </div>
+                        <button class="btn btn-block btn-blue" role="button" type="submit"><i class="fa fa-right-arrow"></i>Login</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
 
+{include file="admin@public/script" /}
+<script>
+    $(function () {
+        $('[name="password"]').on('focus', function () {
+            $('#left-hander').removeClass('initial_left_hand').addClass('left_hand');
+            $('#right-hander').removeClass('initial_right_hand').addClass('right_hand')
+        }).on('blur', function () {
+            $('#left-hander').addClass('initial_left_hand').removeClass('left_hand');
+            $('#right-hander').addClass('initial_right_hand').removeClass('right_hand')
+        });
+
+        //表单提交
+        $(document).ajaxStart(function(){
+            $("button:submit").addClass("log-in").attr("disabled", true);
+        }).ajaxStop(function(){
+            $("button:submit").removeClass("log-in").attr("disabled", false);
+        });
+
+        $("form").submit(function(){
+            var self = $(this);
+            $.post(self.attr("action"), self.serialize(), success, "json");
+            return false;
+
+            function success(data){
+                if(data.code){
+                    layer.msg(data.msg, {time:3000, end:function(){
+                            window.location.href = data.url;
+                        }});
+                } else {
+                    layer.msg(data.msg, {time:3000, end:function(){
+                            //刷新验证码
+                            $(".reloadverify").click();
+                        }});
+                }
+            }
+        });
+        //初始化选中用户名输入框
+        $("input[name=username]").focus();
+        //刷新验证码
+        var verifyimg = $(".reloadverify img");
+        $(".reloadverify").click(function(){
+            if(verifyimg.attr("src").indexOf('?')>0){
+                verifyimg.attr("src", verifyimg.attr("src")+'&random='+Math.random());
+            }else{
+                verifyimg.attr("src", verifyimg.attr("src").replace(/\?.*$/,'')+'?'+Math.random());
+            }
+        });
+    });
+</script>
 </body>
 </html>

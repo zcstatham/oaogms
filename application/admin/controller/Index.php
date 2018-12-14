@@ -19,28 +19,31 @@ class Index extends Base{
      * @param string $username
      * @param string $password
      * @param string $verify
-     * @return mixed|void
+     * @return mixed
      */
-    public function login($username = '', $password = '', $verify = '') {
+    public function login() {
         if ($this->request->isPost()) {
+            $username = $this->request->post('username');
+            $password = $this->request->post('password');
+            $verify = $this->request->post('verify');
             if (!$username || !$password) {
                 $this->error('用户名或者密码不能为空！', '');
             }
-            //验证码验证
-            if(!captcha_check($verify)){
-                return $this->error('验证码错误！', '');
-            }
+//            //验证码验证
+//            if(!captcha_check($verify)){
+//                $this->error('验证码错误！', '');
+//            }
 
-            $user = model('Account');
-            $uid  = $user->login($username, $password);
+            $uid  = model('SysAdmin')->login($username, $password);
             if ($uid) {
-                return $this->success('登录成功！', url('admin/index/index'));
+                $this->success('登录成功！', url('admin/index/index'));
             } else {
-                return $this->error($error, '登录失败');
+                $this->error( '登录失败');
             }
         } else {
             return $this->fetch();
         }
+        return false;
     }
 
     /**

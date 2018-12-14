@@ -11,9 +11,9 @@ namespace app\admin\controller;
 use think\Controller;
 
 class Base extends Controller{
-
-    protected $param;
-    protected $url_path = "";     //当前完全访问路径
+    protected $middleware = [
+        'Menu' 	=> ['except' => ['login','logout'] ],
+    ];
 
     /**
      * 初始化验证
@@ -21,45 +21,47 @@ class Base extends Controller{
      * 验证权限
      * 设置菜单
      */
-    public function _initialize() {
+   /* public function _initialize() {
         $this->param = $this->request->param();
         $this->url_path = strtolower($this->request->module() . '/' . $this->request->controller() . '/' . $this->request->action());
+        define('IS_ROOT', is_administrator());
+        $this->setMenu();
 
         //判断登录且不在验证url里
-        if (!is_login() and !in_array($this->url_path, array('admin/index/login', 'admin/index/logout', 'admin/index/verify'))) {
-            $this->redirect('admin/index/login');
-        }
-
-        if (!in_array($this->url_path, array('admin/index/login', 'admin/index/logout', 'admin/index/verify'))) {
-            // 是否是超级管理员
-            define('IS_ROOT', is_administrator());
-            // 检测系统权限
-            if (!IS_ROOT) {
-                $access = $this->accessControl();
-                if (false === $access) {
-                    $this->error('403:禁止访问');
-                } elseif (null === $access) {
-                    $dynamic = $this->checkDynamic(); //检测分类栏目有关的各项动态权限
-                    if ($dynamic === null) {
-                        //检测访问权限
-                        if (!$this->checkRule($this->url_path, array('in', '1,2'))) {
-                            $this->error('未授权访问!');
-                        } else {
-                            // 检测分类及内容有关的各项动态权限
-                            $dynamic = $this->checkDynamic();
-                            if (false === $dynamic) {
-                                $this->error('未授权访问!');
-                            }
-                        }
-                    } elseif ($dynamic === false) {
-                        $this->error('未授权访问!');
-                    }
-                }
-            }
-            //菜单设置
+//        if (!is_login() and !in_array($this->url_path, array('admin/index/login', 'admin/index/logout', 'admin/index/verify'))) {
+//            $this->redirect('admin/index/login');
+//        }
+//
+//        if (!in_array($this->url_path, array('admin/index/login', 'admin/index/logout', 'admin/index/verify'))) {
+//            // 是否是超级管理员
+//            define('IS_ROOT', is_administrator());
+//            // 检测系统权限
+//            if (!IS_ROOT) {
+//                $access = $this->accessControl();
+//                if (false === $access) {
+//                    $this->error('403:禁止访问');
+//                } elseif (null === $access) {
+//                    $dynamic = $this->checkDynamic(); //检测分类栏目有关的各项动态权限
+//                    if ($dynamic === null) {
+//                        //检测访问权限
+//                        if (!$this->checkRule($this->url_path, array('in', '1,2'))) {
+//                            $this->error('未授权访问!');
+//                        } else {
+//                            // 检测分类及内容有关的各项动态权限
+//                            $dynamic = $this->checkDynamic();
+//                            if (false === $dynamic) {
+//                                $this->error('未授权访问!');
+//                            }
+//                        }
+//                    } elseif ($dynamic === false) {
+//                        $this->error('未授权访问!');
+//                    }
+//                }
+//            }
+//            //菜单设置
 //            $this->setMenu();
-        }
-    }
+//        }
+    }*/
 
     /**
      * 权限检测
@@ -106,8 +108,8 @@ class Base extends Controller{
      * @author 朱亚杰  <xcoolcc@gmail.com>
      */
     final protected function accessControl() {
-        $allow = config('app.siteinfo.allow_visit');
-        $deny = config('app.siteinfo.deny_visit');
+        $allow = config('siteinfo.allow_visit');
+        $deny = config('siteinfo.deny_visit');
         $check = strtolower($this->request->controller() . '/' . $this->request->action());
         if (!empty($deny) && in_array_case($check, $deny)) {
             return false; //非超管禁止访问deny中的方法
@@ -125,46 +127,44 @@ class Base extends Controller{
             'main'  => array(),
             'child' => array(),
         );
-        $where['pid']  = 0;
-        $where['hide'] = 0;
-        $where['type'] = 'admin';
-        if (!config('app.siteinfo.develop_mode')) {
+        $map['pid']  = 0;
+        $map['hide'] = 0;
+        $map['type'] = 'admin';
+        if (!config('siteinfo.develop_mode')) {
             // 是否开发者模式
-            $where['is_dev'] = 0;
+            $map['is_dev'] = 0;
         }
-        $row = db('menu')->field('id,title,url,icon,"" as style')->where($where)->order('sort asc')->select();
+        $row = db('menu')->field('nid,title,url,icon,"" as style')->where($map)->order('sort asc')->select();
         foreach ($row as $key => $value) {
             //此处用来做权限判断
-            if (!IS_ROOT && !$this->checkRule($value['url'], 2, null)) {
-                unset($menu['main'][$value['id']]);
-                continue; //继续循环
+            if (IS_ROOT || $this->checkRule($value['url'], 2, null) || 'test') {
+                if ($controller == $value['url']) {
+                    $value['style'] = "active";
+                }
+                $menu['main'][$value['nid']] = $value;
             }
-            if ($controller == $value['url']) {
-                $value['style'] = "active";
-            }
-            $menu['main'][$value['id']] = $value;
         }
 
         // 查找当前子菜单
         $pid = db('menu')->where("pid !=0 AND url like '%{$hover_url}%'")->value('pid');
-        $id  = db('menu')->where("pid = 0 AND url like '%{$hover_url}%'")->value('id');
+        $id  = db('menu')->where("pid = 0 AND url like '%{$hover_url}%'")->value('nid');
         $pid = $pid ? $pid : $id;
-        if (strtolower($hover_url) == 'admin/content' || strtolower($hover_url) == 'admin/attribute') {
-            //内容管理菜单
-            $pid = db('menu')->where("pid =0 AND url like '%admin/category%'")->value('id');
-        }
+//        if (strtolower($hover_url) == 'admin/content' || strtolower($hover_url) == 'admin/attribute') {
+//            //内容管理菜单
+//            $pid = db('menu')->where("pid =0 AND url like '%admin/category%'")->value('id');
+//        }
         if ($pid) {
             $map['pid']  = $pid;
             $map['hide'] = 0;
             $map['type'] = 'admin';
-            $row         = db('menu')->field("id,title,url,icon,`group`,pid,'' as style")->where($map)->order('sort asc')->select();
+            $row         = db('menu')->field("nid,title,url,icon,`group`,pid,'' as style")->where($map)->order('sort asc')->select();
             foreach ($row as $key => $value) {
-                if (IS_ROOT || $this->checkRule($value['url'], 2, null)) {
+                if (IS_ROOT || $this->checkRule($value['url'], 2, null) || 'test') {
                     if ($controller == $value['url']) {
                         $menu['main'][$value['pid']]['style'] = "active";
                         $value['style']                       = "active";
                     }
-                    $menu['child'][$value['group']][] = $value;
+                    $menu['child'][] = $value;
                 }
             }
         }

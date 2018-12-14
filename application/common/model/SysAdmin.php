@@ -126,33 +126,32 @@ class SysAdmin extends Base
      * @throws \think\db\exception\ModelNotFoundException
      * @throws \think\exception\DbException
      */
-    private function login($username = '', $password = '')
+    public function login($username = '', $password = '')
     {
         if (!$username) {
             return false;
         }
-        $this->withSearch(['username'], [
+        $user = $this->where([
             'username'	 =>	$username,
-            'status'	 =>	1
-        ]);
-        if (isset($this->sid) && $this->sid && $this->status && md5($password . $this->salt) === $this->password) {
+        ])->find();
+        if (isset($user->sid) && $user->sid && $user->status && md5($password . $user->salt) === $user->password) {
 
-            $this->save([
+            $user->save([
                 'login_times' => array('inc', 'login_times', 1),
                 'last_login_ip' => get_client_ip()
-            ],['sid' => $this->sid]);
+            ],['sid' => $user->sid]);
 
             /* 记录登录SESSION和COOKIES */
             $auth = array(
-                'sid' => $this->sid,
-                'username' => $this->username,
-                'last_login_timestamp' => $this->last_login_timestamp,
+                'sid' => $user->sid,
+                'username' => $user->username,
+                'last_login_timestamp' => $user->last_login_timestamp,
             );
 
             session('user_auth', $auth);
             session('user_auth_sign', data_auth_sign($auth));
             /* 记录登录SESSION和COOKIES */
-            return $this->sid;
+            return $user->sid;
         } else {
             return false;
         }
@@ -167,7 +166,7 @@ class SysAdmin extends Base
      * @param $name *账户名称
      * @return bool 用户id | false
      */
-    private function register($data)
+    public function register($data)
     {
         try {
             $addfield = [];
@@ -186,7 +185,7 @@ class SysAdmin extends Base
     /**
      * 账户登出
      */
-    private function logout()
+    public function logout()
     {
         session('user_auth', null);
         session('user_auth_sign', null);
@@ -198,7 +197,7 @@ class SysAdmin extends Base
      * @param bool $ischangepwd
      * @return bool
      */
-    private function editInfo($data, $ischangepwd = false)
+    public function editInfo($data, $ischangepwd = false)
     {
         if ($data['sid']) {
             if (!$ischangepwd || ($ischangepwd && $data['password'] == '')) {
@@ -225,7 +224,7 @@ class SysAdmin extends Base
      * @param bool $is_reset
      * @return bool
      */
-    private function editPassword($data, $is_reset = false)
+    public function editPassword($data, $is_reset = false)
     {
         $sid = $is_reset ? $data['sid'] : session('user_auth.sid');
         if (!$is_reset && !($checkPass = $this->checkPassword($sid, $data['oldpassword']))) {

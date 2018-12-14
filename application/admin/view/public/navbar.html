@@ -18,6 +18,13 @@
                     <span></span>
                 </a>
             </div>
+            <ul class="navbar-main d-flex align-items-center justify-content-between">
+                {volist name='__menu__.main' id='item' key="index" }
+                <li class="nav-item d-flex align-items-center {$item.style}">
+                    <a class="nav-link" href="{:url($item.url)}">{$item.title}</a>
+                </li>
+                {/volist}
+            </ul>
         </div>
         <ul class="nav-menu list-unstyled d-flex flex-md-row align-items-md-center">
             <!-- Expand-->
