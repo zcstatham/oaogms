@@ -30,22 +30,23 @@ class Group extends Base
      */
     public function index($type = 'admin') {
         $map['module'] = $type;
-        $list  = $this->group->where($map)->order('id desc')->paginate(10, false);
+        $list  = $this->group->where($map)->order('id desc')->paginate(config('siteinfo.list_rows'), false);
         $data = array(
+            'keyList' => $this->group->keyList,
             'list' => $list,
             'page' => $list->render(),
             'type' => $type,
         );
         $this->assign($data);
         $this->setMeta('用户组管理');
-        return $this->fetch();
+        return $this->fetch('public/list');
     }
 
     /**
      * @title 添加用户组
      * @return bool|mixed
      */
-    private function addUserGroup($type = 'admin'){
+    public function addUserGroup($type = 'admin'){
         if ($this->request->isPost()) {
             $result = $this->group->allowField(true)->save($this->request->param());
             if ($result) {
@@ -67,10 +68,10 @@ class Group extends Base
 
     /**
      * @title 修改用户组
-     * @param $gid
+     * @param $id
      * @return bool|mixed
      */
-    private function editUserGroup($gid){
+    public function editUserGroup($id){
         if ($this->request->isPost()) {
             $param = $this->request->param();
             $result = $this->group->allowField(true)->save($param, array('id'=>$param['id']));
@@ -80,10 +81,10 @@ class Group extends Base
                 $this->error("编辑失败！");
             }
         } else {
-            if (!$gid) {
+            if (!$id) {
                 $this->error("非法操作！");
             }
-            $info = $this->group->get($gid);
+            $info = $this->group->get($id);
             $data = array(
                 'info'    => $info,
                 'keyList' => $this->group->keyList,
@@ -95,12 +96,29 @@ class Group extends Base
         return false;
     }
 
+
+    /**
+     * @title 修改用户组状态
+     * @param $id
+     * @param $status
+     * @return bool
+     */
+    public function editUserGroupStatus($id,$status){
+        try{
+            $this->group->save(['status'=>$status],['id'=>$id]);
+            $this->success("更新成功！");
+        } catch (\think\Exception $e){
+            $this->error('更新失败：'.$e->getMessage());
+        }
+        return false;
+    }
+
     /**
      * @title 删除用户组
      * @param $id
      * @return bool
      */
-    private function delUserGroup($id){
+    public function delUserGroup($id){
         if (empty($id)) {
             $this->error("非法操作！");
         }
@@ -119,7 +137,7 @@ class Group extends Base
      * @return bool|mixed
      * @throws \think\Exception\DbException
      */
-    private function authUserGroup($id){
+    public function authUserGroup($id){
         if ($this->request->isPost()) {
             $rule = $this->request->post('rule/a', array());
             $rule_result = false;
@@ -149,7 +167,7 @@ class Group extends Base
             );
             $this->assign($data);
             $this->setMeta('授权');
-            return $this->fetch();
+            return $this->fetch('group/auth');
         }
         return false;
     }
@@ -160,7 +178,7 @@ class Group extends Base
      */
     public function access($type = 'admin') {
         $map['module'] = $type;
-        $list  = $this->rules->where($map)->order('id desc')->paginate(15, false);
+        $list  = $this->rules->where($map)->order('id desc')->paginate(config('siteinfo.list_rows'), false);
         $data = array(
             'list' => $list,
             'page' => $list->render(),

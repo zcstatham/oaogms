@@ -1,26 +1,52 @@
 <?php
 namespace app\admin\controller;
 
+use think\facade\Cache;
+use think\facade\Log;
+
 class Index extends Base{
 
     /**
-     * @title 自有小程序列表
-     * 总用户趋势
-     * 总渠道导入量
-     * 总渠道导出量
-     * @return string
+     * @title 首页
+     * @return mixed
      */
     public function index() {
         return $this->fetch();
     }
 
     /**
-     * @title 账户登录
-     * @param string $username
-     * @param string $password
-     * @param string $verify
+     * @title 清除缓存
      * @return mixed
      */
+    public function clear(){
+        if ($this->request->isPost()) {
+            $clear = $this->request->post('clear');
+            foreach ($clear as $key => $value) {
+                if ($value == 'cache') {
+                    Cache::clear(); // 清空缓存数据
+                } elseif ($value == 'log') {
+                    Log::clear();
+                }
+            }
+            $this->success("更新成功！", url('admin/index/index'));
+        } else {
+            $keylist = array(
+                array('name' => 'clear', 'title' => '更新缓存', 'type' => 'checkbox', 'help' => '', 'option' => array(
+                    'cache' => '缓存数据',
+                    'log'   => '日志数据',
+                ),
+                ),
+            );
+            $data = array(
+                'keyList' => $keylist,
+            );
+            $this->assign($data);
+            $this->setMeta("更新缓存");
+            return $this->fetch('public/edit');
+        }
+        return false;
+    }
+
     public function login() {
         if ($this->request->isPost()) {
             $username = $this->request->post('username');
@@ -46,9 +72,6 @@ class Index extends Base{
         return false;
     }
 
-    /**
-     * @title 后台退出
-     */
     public function logout(){
         model('SysAdmin')->logout();
         $this->redirect('admin/index/login');

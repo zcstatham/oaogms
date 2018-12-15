@@ -32,7 +32,7 @@ class Tree {
 	            }else{
 	                if (isset($refer[$parentId])) {
 	                    $parent =& $refer[$parentId];
-	                    $parent['childs'][] = $data['id'];
+	                    $parent['childs'][] = $data[$pk];
 	                    $parent[$child][] =& $list[$key];
 	                }
 	            }

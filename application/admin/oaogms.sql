@@ -114,6 +114,7 @@ CREATE TABLE `oao_sys_admin` (
   `username` varchar(32) NOT NULL DEFAULT '' COMMENT '用户名',
   `password` varchar(64) NOT NULL DEFAULT '' COMMENT '用户密码',
   `nickname` char(16) NOT NULL DEFAULT '' COMMENT '昵称',
+  `avator` varchar(150) NOT NULL DEFAULT '' COMMENT '头像',
   `email` char(100) DEFAULT NULL COMMENT '邮箱地址',
   `mobile` char(20) DEFAULT NULL COMMENT '手机号码',
   `salt` char(8) NOT NULL DEFAULT '' COMMENT '密码盐值',
@@ -126,7 +127,7 @@ CREATE TABLE `oao_sys_admin` (
 -- ----------------------------
 -- Records of oao_sys_admin
 -- ----------------------------
-INSERT INTO `oao_sys_admin` VALUES ('1', 'admin', '11910e5e47b10789832cf91c53307ca2', '超级管理员', '578322713', '18535318830', 'oaogms', '1', '1', '2018-12-14 19:04:11');
+INSERT INTO `oao_sys_admin` VALUES ('1', 'admin', '11910e5e47b10789832cf91c53307ca2', '超级管理员', '/static/images/avatar-1.jpg', '578322713', '18535318830', 'oaogms', '1', '1', '2018-12-14 19:04:11');
 
 -- ----------------------------
 -- Table structure for oao_user

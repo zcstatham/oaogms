@@ -24,9 +24,9 @@ Route::domain('api',function() {
 });
 
 
-Route::domain('admin',function() {
-    Route::group('',[
+Route::domain('admin',array(
         '/'               => 'admin/index/index',
+        '/clear'               => 'admin/index/clear',
 
         'publice/index'   => 'admin/publice/index',
         'publice/own'     => 'admin/publice/own',
@@ -36,17 +36,13 @@ Route::domain('admin',function() {
         'mini/own'     => 'admin/mini/own',
         'mini/channel' => 'admin/mini/channel',
 
-        'admin/index' => 'admin/admin/index',
-        'admin/group' => 'admin/admin/group',
-        'admin/auth' => 'admin/admin/auth',
-    ])->middleware('Auth');
+        'system/index' => 'admin/user/index',
+        'system/group' => 'admin/group/index',
+        'system/auth' => 'admin/group/access',
 
-    Route::group('',[
         '/login'   => 'admin/index/login',
         '/logout'     => 'admin/index/logout',
-        '/verify' => 'admin/index/verify',
-    ]);
-});
+    ));
 
 //return [
 //    '__pattern__' => [

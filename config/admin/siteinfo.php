@@ -11,6 +11,6 @@
 // +----------------------------------------------------------------------
 
 return [
-    'user_salt' => 'hxsmxy',
+    'avator' => '/static/images/avatar-1.jpg',
     'user_administrator' => '1',
 ];

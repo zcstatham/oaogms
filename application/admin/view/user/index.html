@@ -1,0 +1,115 @@
+{extend name="public/base" /}
+{block name="style"}
+<!-- Core stylesheets -->
+<link rel="stylesheet" href="__CSS__/ui-elements/button.css">
+<style>
+    .table td, .table th {
+        vertical-align: middle;
+        text-align: center;
+        overflow: auto;
+    }
+
+    .btn.focus, .btn:focus{
+        outline: 0;
+        box-shadow: initial;
+    }
+
+    .table .btn{
+        width: auto;
+        margin: 0;
+        font-size: 0.9rem;
+        line-height: initial;
+        border-radius: 5px;
+    }
+
+    .table tr a.text-item {
+        padding: 10px 20px;
+        font-size: 0.8em;
+        color: #777;
+        width: 100%;
+        justify-content: center;
+    }
+
+    /*.table tr a.text-item:hover {*/
+        /*background: #f5f5f5;*/
+    /*}*/
+
+    .table tr a.text-item:active {
+        color: inherit;
+        text-decoration: none;
+        background-color: transparent;
+    }
+
+    .table tr .msg-profile {
+        width: 45px;
+        height: 45px;
+        margin-right: 10px;
+    }
+
+    .table tr h3 {
+        font-weight: 500;
+    }
+
+    .table tr span {
+        position: static;
+        font-size: 0.9em;
+        color: #999;
+    }
+
+    .table tr .msg-body{
+        text-align:left;
+    }
+</style>
+{/block}
+{block name="body"}
+<div class="content-inner">
+    <div class="content-inner chart-cont">
+        <!--***** CONTENT *****-->
+        <div class="top-option third-button container">
+            <a href="{:url('admin/user/addUser')}" class="btn btn-outline-primary">+ 添加用户</a>
+        </div>
+        <hr>
+        <div class="container">
+            <table class="table table-hover">
+                <thead>
+                <tr class="bg-info text-white">
+                    <th>序号</th>
+                    <th>用户名</th>
+                    <th>昵称</th>
+                    <th>手机号码</th>
+                    <th>用户状态</th>
+                    <th>操作</th>
+                </tr>
+                </thead>
+                <tbody>
+                {volist name='list' id='item' key="index" }
+                <tr class="table-{/*$index%2==0?'info':'success'*/}">
+                    <th scope="row">{$index}</th>
+                    <td><a rel="nofollow" href="#" class="text-item d-flex">{$item.username}</a></td>
+                    <td><a rel="nofollow" href="#" class="text-item d-flex">
+                        <div class="msg-profile"> <img src="{$item.avator}" alt="..." class="img-fluid rounded-circle"></div>
+                        <div class="msg-body">
+                            <h3 class="h5">{$item.nickname}</h3><span>{$item.email}</span>
+                        </div>
+                    </a></td>
+                    <td><a rel="nofollow" href="#" class="text-item d-flex">{$item.mobile}</a></td>
+                    <td class="first-button">
+                        {if $item.status == '1'}
+                        <a href="{:url('admin/user/editUserStatus', array('id'=>$item['id'],'status'=>0))}" class="btn btn-link red">禁用</a>
+                        {else /}
+                        <a href="{:url('admin/user/editUserStatus', array('id'=>$item['id'],'status'=>1))}" class="btn btn-link blue">启用</a>
+                        {/if}
+                    </td>
+                    <td class="first-button">
+                        <a href="{:url('admin/user/editUser',array('id'=>$item['id']))}" class="btn btn-link blue">编辑</a>
+                        <a href="{:url('admin/user/delUser', array('id'=>$item['id']))}" class="btn btn-link blue">删除</a>
+                    </td>
+                </tr>
+                {/volist}
+                </tbody>
+            </table>
+            {$page}
+        </div>
+    </div>
+</div>
+{/block}

@@ -25,10 +25,10 @@ class Menu extends Base
      * @return mixed
      */
     public function index() {
-        $list  = $this->menu->order('sort asc,nid asc')->cache(true)->all();
-        if(!$list->isEmpty()){
+        $list  = $this->menu->order('sort asc,nid asc')->all()->toArray();
+        if(!empty($list)){
             $tree = new \doc\Tree();
-            $list = $tree->toFormatTree($list);
+            $list = $tree->toFormatTree($list,'title','nid');
         }
         $this->setMeta('菜单列表');
         $this->assign('list', $list);
@@ -54,7 +54,7 @@ class Menu extends Base
             if($this->menu){
                 session('admin_menu_list', null);
                 //记录行为
-//                action_log('update_menu', 'Menu', $id, session('user_auth.uid'));
+//                action_log('update_menu', 'Menu', $id, session('user_auth.sid'));
                 $this->success('新增成功');
             } else {
                 $this->error('新增失败');
@@ -126,7 +126,7 @@ class Menu extends Base
         }
         if ($this->menu->where('nid',$id)->delete()) {
             //记录行为
-//            action_log('update_menu', 'Menu', $id, session('user_auth.uid'));
+//            action_log('update_menu', 'Menu', $id, session('user_auth.sid'));
             $this->success('删除成功');
         } else {
             $this->error('删除失败！');

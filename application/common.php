@@ -197,7 +197,7 @@ function checkRule($rule, $type = 1, $mode = 'url') {
     if (!$Auth) {
         $Auth = new \author\Auth();
     }
-    if (!$Auth->check($rule, session('user_auth.uid'), $type, $mode)) {
+    if (!$Auth->check($rule, session('user_auth.sid'), $type, $mode)) {
         return false;
     }
     return true;

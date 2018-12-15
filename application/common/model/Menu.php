@@ -21,5 +21,23 @@ class Menu extends Base
         array('name'=>'hide','title'=>'是否隐藏','type'=>'radio','option'=>array('1'=>'是','0'=>'否'),'help'=>''),
         array('name'=>'is_dev','title'=>'仅开发可见','type'=>'radio','option'=>array('1'=>'是','0'=>'否'),'help'=>''),
         array('name'=>'status','title'=>'菜单状态','type'=>'radio','option'=>array('1'=>'启用','0'=>'禁用'),'help'=>''),
+        array('name'=>'options', 'title'=>'操作', 'type'=>'options', 'help'=>'', 'option'=>array(
+            'line'=>array(
+                0 => ['授权','admin/group/authUserGroup'],
+                1 => ['编辑','admin/group/editUserGroup'],
+                2 => ['删除','admin/group/delUserGroup'],
+            ),
+            'top'=>array(
+                0 => ['+ 添加用户组','admin/group/addUserGroup']
+            ),
+        )),
     );
+
+    protected function getIdAttr($value, $data){
+        return $data['nid'];
+    }
+
+    protected function setIdAttr($value, $data){
+        return $data['id'];
+    }
 }

@@ -19,19 +19,19 @@ use think\Model;
 class SysAdmin extends Base
 {
 
+    protected $pk = 'sid';
+
     protected $insert = ['username', 'status' => 0];
 
     public $editfield = array(
-        array('name'=>'uid','type'=>'hidden'),
+        array('name'=>'sid','type'=>'hidden'),
         array('name'=>'username','title'=>'用户名','type'=>'readonly','help'=>''),
         array('name'=>'nickname','title'=>'昵称','type'=>'text','help'=>''),
+//        array('name'=>'avator','title'=>'头像','type'=>'picture','help'=>''),
         array('name'=>'password','title'=>'密码','type'=>'password','help'=>'为空时则不修改'),
-        array('name'=>'sex','title'=>'性别','type'=>'select','option'=>array('0'=>'保密','1'=>'男','2'=>'女'),'help'=>''),
         array('name'=>'email','title'=>'邮箱','type'=>'text','help'=>'用户邮箱，用于找回密码等安全操作'),
-        array('name'=>'qq','title'=>'QQ','type'=>'text','help'=>''),
-        array('name'=>'score','title'=>'用户积分','type'=>'text','help'=>''),
-        array('name'=>'signature','title'=>'用户签名','type'=>'textarea','help'=>''),
-        array('name'=>'status','title'=>'状态','type'=>'select','option'=>array('0'=>'禁用','1'=>'启用'),'help'=>''),
+        array('name'=>'mobile','title'=>'手机号码','type'=>'text','help'=>''),
+        array('name'=>'status','title'=>'状态','type'=>'select','option'=>array('1'=>'启用','0'=>'禁用'),'help'=>''),
     );
 
     public $addfield = array(
@@ -39,27 +39,25 @@ class SysAdmin extends Base
         array('name'=>'password','title'=>'密码','type'=>'password','help'=>'用户密码不能少于6位'),
         array('name'=>'repassword','title'=>'确认密码','type'=>'password','help'=>'确认密码'),
         array('name'=>'email','title'=>'邮箱','type'=>'text','help'=>'用户邮箱，用于找回密码等安全操作'),
+        array('name'=>'mobile','title'=>'手机号码','type'=>'text','help'=>'用户邮箱，用于找回密码等安全操作'),
     );
 
     public $useredit = array(
-        array('name'=>'uid','type'=>'hidden'),
+        array('name'=>'id','type'=>'hidden'),
         array('name'=>'nickname','title'=>'昵称','type'=>'text','help'=>''),
-        array('name'=>'sex','title'=>'性别','type'=>'select','option'=>array('0'=>'保密','1'=>'男','2'=>'女'),'help'=>''),
+//        array('name'=>'avator','title'=>'头像','type'=>'picture','help'=>''),
         array('name'=>'email','title'=>'邮箱','type'=>'text','help'=>'用户邮箱，用于找回密码等安全操作'),
-        array('name'=>'mobile','title'=>'联系电话','type'=>'text','help'=>''),
-        array('name'=>'qq','title'=>'QQ','type'=>'text','help'=>''),
-        array('name'=>'signature','title'=>'用户签名','type'=>'textarea','help'=>''),
+        array('name'=>'mobile','title'=>'手机号码','type'=>'text','help'=>'用户邮箱，用于找回密码等安全操作'),
     );
 
-    public $userextend = array(
-        array('name'=>'company','title'=>'单位名称','type'=>'text','help'=>''),
-        array('name'=>'company_addr','title'=>'单位地址','type'=>'text','help'=>''),
-        array('name'=>'company_contact','title'=>'单位联系人','type'=>'text','help'=>''),
-        array('name'=>'company_zip','title'=>'单位邮编','type'=>'text','help'=>''),
-        array('name'=>'company_depart','title'=>'所属部门','type'=>'text','help'=>''),
-        array('name'=>'company_post','title'=>'所属职务','type'=>'text','help'=>''),
-        array('name'=>'company_type','title'=>'单位类型','type'=>'select', 'option'=>'', 'help'=>''),
-    );
+    protected function getIdAttr($value, $data){
+        return $data['sid'];
+    }
+
+    protected function setIdAttr($value, $data){
+        return $data['id'];
+    }
+
     /**
      * username查询器
      * @param Model $query
@@ -94,7 +92,7 @@ class SysAdmin extends Base
     /**
      * 获取账户列表
      */
-    private function getUserList($arrayMap, $order)
+    public function getUserList($arrayMap, $order)
     {
         try {
             return $this->where($arrayMap)->order($order)->find();
@@ -144,7 +142,8 @@ class SysAdmin extends Base
             /* 记录登录SESSION和COOKIES */
             $auth = array(
                 'sid' => $user->sid,
-                'username' => $user->username,
+                'nickname' => $user->nickname,
+                'avator' => $user->avator,
                 'last_login_timestamp' => $user->last_login_timestamp,
             );
 
@@ -169,12 +168,13 @@ class SysAdmin extends Base
     public function register($data)
     {
         try {
-            $addfield = [];
-            foreach($data as $key=>$value) {
-                $addfield[$key] = $data[$value];
+            $data['salt'] = rand_string(6);
+            !isset($data['nickname']) && ($data['nickname'] =  $data['username']);
+            !isset($data['avator']) && ($data['avator'] = config('siteinfo.avator'));
+            unset($data['id']);
+            if(validate('SysAdmin')->check($data)){
+                $this->save($data);
             }
-            $addfield['salt'] = rand_string(6);
-            $this->save($addfield);
             return $this->sid;
         }catch (\think\Exception $e){
             trace('数据库操作失败：' . $e->getMessage(), 'error');

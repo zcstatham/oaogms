@@ -1,0 +1,52 @@
+
+{extend name="public/base" /}
+{block name="style"}
+<style>
+	.table td, .table th {
+		vertical-align: middle;
+		text-align: center;
+		overflow: auto;
+	}
+	.table td:first-child, .table th:first-child{
+		min-width: 100px;
+	}
+</style>
+{/block}
+{block name="body"}
+<div class="content-inner">
+	<!--***** CONTENT *****-->
+	<form method="post" class="form form-horizontal content-inner chart-cont">
+		<table class="table table-striped">
+			<thead>
+			<tr class="bg-info text-white">
+				<th>分组</th>
+				<th class="text-center">权限</th>
+			</tr>
+			</thead>
+			<tbody>
+			{volist name="list" id="node"}
+			<tr>
+				<td>{$key|default='默认'}</td>
+				<td class="text-left">
+					{volist name="node" id="item"}
+					<label class="custom-control custom-checkbox m-2 mr-sm-2 col-2">
+						<input type="checkbox" name="rule[]" value="{$item['id']}" {if in_array($item['id'],$auth_list)}checked{/if}  class="custom-control-input">
+						<span class="custom-control-indicator"></span>
+						<span class="custom-control-description">{$item['title']}</span>
+					</label>
+					{/volist}
+				</td>
+			</tr>
+			{/volist}
+			</tbody>
+		</table>
+		<div class="form-group">
+			<div class="text-center">
+				<input type="hidden" name="id" value="{$info['id']|default=''}">
+				<button class="btn btn-general btn-blue mr-2" type="submit" target-form="form-horizontal">确 定</button>
+				<button class="btn btn-general btn-white" onclick="javascript:history.back(-1);return false;">返 回</button>
+			</div>
+		</div>
+	</form>
+</div>
+{/block}

@@ -22,6 +22,14 @@
     .navbar-main .active a, .navbar-main li:hover a {
         border-bottom-color: #EEF5F9;
     }
+
+    .page-content{
+        position: absolute;
+        top: 76px;
+        bottom: 0;
+        left: 0;
+        right: 0;
+    }
 </style>
 {block name="style"}{/block}
 </head>
@@ -32,13 +40,16 @@
 {include file="admin@public/navbar" /}
 
 <!--====================================================
-                         MAIN TOOL
-======================================================-->
-<!--{include file="admin@public/tool" /}-->
-<!--====================================================
                          MAIN CONTENT
 ======================================================-->
+<div class="page-content d-flex align-items-stretch">
+<!--====================================================
+                         LEFT NAV
+======================================================-->
+{include file="admin@public/leftnav" /}
+
 {block name="body"}{/block}
+</div>
 <!--====================================================
                          MAIN FOOTER
 ======================================================-->

@@ -9,7 +9,7 @@
 namespace app\admin\controller;
 
 
-class SysAdmin extends Base
+class User extends Base
 {
     protected $model;
 
@@ -21,13 +21,14 @@ class SysAdmin extends Base
      * @title 用户列表
      * @return mixed
      */
-    public function index(){
+    public function index()
+    {
         $param = $this->request->param();
-        $map['status'] = array('=', 1);
-        $order = "uid desc";
-        $list  = $this->model
+        $map[] = array('sid','<>', 1);
+        $order = "sid desc";
+        $list = $this->model
             ->where($map)->order($order)
-            ->paginate(15, false);
+            ->paginate(config('siteinfo.list_rows'), false);
         $data = array(
             'list' => $list,
             'page' => $list->render(),
@@ -43,7 +44,8 @@ class SysAdmin extends Base
      * @param $data
      * @return bool|mixed
      */
-    private function addUser($data){
+    public function addUser()
+    {
         if ($this->request->isPost()) {
             $data = $this->request->param();
             //创建注册用户
@@ -51,7 +53,7 @@ class SysAdmin extends Base
             if ($result) {
                 $this->success('用户添加成功！', url('admin/user/index'));
             } else {
-                $this->error('修改失败');
+                $this->error('添加失败！');
             }
         } else {
             $data = array(
@@ -69,23 +71,23 @@ class SysAdmin extends Base
      * @param $mid
      * @return bool|mixed
      */
-    private function editUser($mid){
+    public function editUser($id)
+    {
         if ($this->request->isPost()) {
             $data = $this->request->post();
             $reuslt = $this->model->editInfo($data, true);
-
             if (false !== $reuslt) {
                 $this->success('修改成功！', url('admin/user/index'));
             } else {
                 $this->error('修改失败');
             }
         } else {
-            $info = $this->getUserinfo();
-            if(!$info){
+            $info = $this->model->get($id);
+            if (!$info) {
                 $this->error('不存在此用户！');
             }
             $data = array(
-                'info'    => $info,
+                'info' => $info,
                 'keyList' => $this->model->editfield,
             );
             $this->assign($data);
@@ -96,21 +98,38 @@ class SysAdmin extends Base
     }
 
     /**
-     * @title 更新用户状态
+     * 修改用户状态
+     * @param $id
+     * @param $status
      * @return bool
      */
-    private function delUser(){
-        if ($this->request->isPost()) {
-            $data = $this->request->post();
-            $reuslt = $this->model->editInfo($data, true);
+    public function editUserStatus($id,$status)
+    {
+        try {
+            $this->model->save(['status' => $status], ['sid' => $id]);
+            $this->success("更新成功！", url('admin/user/index'));
+        } catch (\think\Exception $e) {
+            $this->error('更新失败：' . $e->getMessage());
+        }
+        return false;
+    }
 
-            if (false !== $reuslt) {
-                $this->success('修改成功！', url('admin/user/index'));
+    /**
+     * @title 删除用户
+     * @return bool
+     */
+    public function delUser($id)
+    {
+        //获取用户信息
+        try {
+            if ($this->model->get($id)) {
+                $this->model->where(array('sid' => $id))->delete();
+                $this->success('删除用户成功！');
             } else {
-                $this->error('修改失败');
+                $this->error('删除失败,此用户不存在');
             }
-        } else {
-            $this->error('修改失败');
+        } catch (\think\Exception $e) {
+            $this->error('删除失败：' . $e->getMessage());
         }
         return false;
     }
@@ -119,7 +138,8 @@ class SysAdmin extends Base
      * @title 重置密码
      * @return bool
      */
-    private function resetPass(){
+    private function resetPass()
+    {
         if ($this->request->isPost()) {
             $data = $this->request->post();
             $reuslt = $this->model->editPassword($data, true);
@@ -143,24 +163,25 @@ class SysAdmin extends Base
      * @throws \think\db\exception\ModelNotFoundException
      * @throws \think\exception\DbException
      */
-    private function authUser($mid){
+    private function authUser($mid)
+    {
         $access = model('AuthGroupAccess');
-        $group  = model('AuthGroup');
+        $group = model('AuthGroup');
         if ($this->request->isPost()) {
-            $uid = input('uid', '', 'trim,intval');
-            $access->where('uid', $uid)->delete();
+            $uid = input('sid', '', 'trim,intval');
+            $access->where('sid', $uid)->delete();
             $group_id = input('gid', '', 'trim,intval');
             if ($group_id) {
                 $add = array(
-                    'uid'      => $uid,
+                    'sid' => $uid,
                     'group_id' => $group_id,
                 );
                 $access->save($add);
             }
             $this->success("设置成功！");
         } else {
-            $uid  = input('id', '', 'trim,intval');
-            $row  = $group->all();
+            $uid = input('id', '', 'trim,intval');
+            $row = $group->all();
             $auth = $access->where(array('uid' => $uid))->select();
             $auth_list = array();
             foreach ($auth as $key => $value) {
@@ -170,27 +191,15 @@ class SysAdmin extends Base
                 $list[$value['module']][] = $value;
             }
             $data = array(
-                'uid'       => $uid,
+                'uid' => $uid,
                 'auth_list' => $auth_list,
-                'list'      => $list,
+                'list' => $list,
             );
             $this->assign($data);
             $this->setMeta("用户分组");
             return $this->fetch();
         }
         return false;
-    }
-
-    /**
-     * @title 获取用户信息
-     * @param null $uid
-     * @return mixed
-     */
-    private function getUserinfo($uid = null) {
-        $uid  = $uid ? : input('id');
-        //如果无UID则修改当前用户
-        $uid  = $uid ? : session('user_auth.uid');
-        return $this->model->get($uid);
     }
 
     protected function beforeMethod()

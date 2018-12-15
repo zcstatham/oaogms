@@ -4,7 +4,6 @@
 <link rel="stylesheet" href="__CSS__/form.css">
 {/block}
 {block name="body"}
-<div class="page-content d-flex align-items-stretch">
 	<div class="content-inner">
 		<form method="post" class="form form-horizontal">
 			{if !isset($info)}
@@ -23,10 +22,10 @@
 					{volist name="vGroup" id="field"}
 					{if $field['type'] eq 'hidden'}
 					<input type="hidden" name="{$field['name']}" value="{$info[$field['name']]|default=''}"/>
-					{else/}
+					{elseif $field['type'] neq 'options'/}
 					<div class="form-group row">
 						<label for="{$field['name']}" class="col-2 text-right col-form-label">{$field['title']|htmlspecialchars}</label>
-						<div class="col-9">
+						<div class="col-9 col-form-label">
 							{:widget('common/Form/show',array($field,$info))}
 							<small class="form-text text-muted">{$field['help']|default=''}</small>
 						</div>
@@ -41,10 +40,10 @@
 			{volist name="keyList" id="field"}
 			{if $field['type'] eq 'hidden'}
 			<input type="hidden" name="{$field['name']}" value="{$info[$field['name']]|default=''}"/>
-			{else/}
+			{elseif $field['type'] neq 'options'/}
 			<div class="form-group row">
 				<label for="{$field['name']}" class="col-2 text-right col-form-label">{$field['title']|htmlspecialchars}</label>
-				<div class="col-9">
+				<div class="col-9 col-form-label">
 					{:widget('common/Form/show',array($field,$info))}
 					<small class="form-text text-muted">{$field['help']|default=''}</small>
 				</div>
@@ -61,5 +60,4 @@
 			</div>
 			</form>
 	</div>
-</div>
 {/block}
