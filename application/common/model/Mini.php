@@ -13,42 +13,31 @@ use think\facade\Log;
 
 class Mini extends Base
 {
-    /**
-     * 自有小程序数据
-     * @return string
-     */
-    public function own(){
-        return own();
+
+    protected $pk = 'mid';
+
+    public $keyList = array(
+        array('name'=>'name','title'=>'名称','type'=>'text','help'=>''),
+        array('name'=>'type','title'=>'类型','type'=>'radio','option'=>array('1'=>'小程序','0'=>'小游戏'),'help'=>''),
+        array('name'=>'appid','title'=>'appId','type'=>'text','help'=>''),
+        array('name'=>'remark','title'=>'描述','type'=>'text','help'=>''),
+        array('name'=>'options', 'title'=>'操作', 'type'=>'options', 'help'=>'', 'option'=>array(
+            'line'=>array(
+                0 => ['详细','admin/mini/moreInfo'],
+                1 => ['编辑','admin/mini/editMini'],
+                2 => ['删除','admin/mini/delMini'],
+            ),
+            'top'=>array(
+                0 => ['+ 添加小程序','admin/mini/addMini']
+            ),
+        )),
+    );
+
+    protected function getIdAttr($value, $data){
+        return $data['mid'];
     }
 
-    /**
-     * 渠道小程序数据
-     * @return string
-     */
-    public function channel(){
-        return channel();
-    }
-
-    public function getMiniInfoById($key){
-        $mid = strcode($key,'decode');
-        try{
-            $mini = $this->get($mid)->cache(true);
-            Log::write($mini,'notice');
-            return $mini;
-        }catch (\think\Exception $e){
-            $ret['msg'] = $e->getMessage();
-            return $ret;
-        }
-    }
-
-    public function getMiniInfoByAppId($key){
-        try{
-            $mini = $this->where('m_sid',$key)->cache(true);
-            Log::write($mini,'notice');
-            return $mini;
-        }catch (\think\Exception $e){
-            $ret['msg'] = $e->getMessage();
-            return $ret;
-        }
+    protected function setIdAttr($value, $data){
+        return $data['id'];
     }
 }

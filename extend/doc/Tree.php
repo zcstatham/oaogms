@@ -18,26 +18,45 @@ class Tree {
 	protected function list_to_tree($list, $pk='id', $pid = 'pid', $child = '_child', $root = 0) {
 	    // 创建Tree
 	    $tree = array();
-	    if(is_array($list)) {
+	    if($list instanceof \think\model\Collection) {
 	        // 创建基于主键的数组引用
 	        $refer = array();
 	        foreach ($list as $key => $data) {
-	            $refer[$data[$pk]] =& $list[$key];
+	            $refer[$data[$pk]] = $data['out'];
 	        }
-	        foreach ($list as $key => $data) {
+	        foreach ($refer as $key => $data) {
 	            // 判断是否存在parent
 	            $parentId =  $data[$pid];
 	            if ($root == $parentId) {
-	                $tree[] =& $list[$key];
+	                $tree[] =& $refer[$key];
 	            }else{
 	                if (isset($refer[$parentId])) {
 	                    $parent =& $refer[$parentId];
 	                    $parent['childs'][] = $data[$pk];
-	                    $parent[$child][] =& $list[$key];
+	                    $parent[$child][] =& $refer[$key];
 	                }
 	            }
 	        }
-	    }
+	    }elseif(is_array($list)) {
+            // 创建基于主键的数组引用
+            $refer = array();
+            foreach ($list as $key => $data) {
+                $refer[$data[$pk]] =& $list[$key];
+            }
+            foreach ($list as $key => $data) {
+                // 判断是否存在parent
+                $parentId =  $data[$pid];
+                if ($root == $parentId) {
+                    $tree[] =& $list[$key];
+                }else{
+                    if (isset($refer[$parentId])) {
+                        $parent =& $refer[$parentId];
+                        $parent['childs'][] = $data[$pk];
+                        $parent[$child][] =& $list[$key];
+                    }
+                }
+            }
+        }
 	    return $tree;
 	}
 

@@ -25,14 +25,18 @@ class Menu extends Base
      * @return mixed
      */
     public function index() {
-        $list  = $this->menu->order('sort asc,nid asc')->all()->toArray();
+        $list  = $this->menu->order('sort asc,nid asc')->all();
         if(!empty($list)){
             $tree = new \doc\Tree();
-            $list = $tree->toFormatTree($list,'title','nid');
+            $list = $tree->toFormatTree($list,'title');
         }
+        $data = array(
+            'list'=>$list,
+            'keyList'=>$this->menu->keyList
+        );
         $this->setMeta('菜单列表');
-        $this->assign('list', $list);
-        return $this->fetch();
+        $this->assign($data);
+        return $this->fetch('public/list');
     }
 
     /**
@@ -40,7 +44,7 @@ class Menu extends Base
      */
     public function editable($name = null, $value = null, $pk = null) {
         if ($name && ($value != null || $value != '') && $pk) {
-            $this->menu->where(array('nid' => $pk))->setField($name, $value);
+            $this->menu->where(array('id' => $pk))->setField($name, $value);
         }
     }
 
@@ -48,26 +52,26 @@ class Menu extends Base
      * @title 新增菜单
      * @author yangweijie <yangweijiester@gmail.com>
      */
-    public function addMenu(){
+    public function addMenu($pid){
         if ($this->request->isPost()) {
             $this->menu->save($this->request->param());
             if($this->menu){
                 session('admin_menu_list', null);
                 //记录行为
 //                action_log('update_menu', 'Menu', $id, session('user_auth.sid'));
-                $this->success('新增成功');
+                $this->success('新增成功','admin/menu/index');
             } else {
                 $this->error('新增失败');
             }
         } else {
-            $this->assign('info', array('pid' => input('pid')));
-            $menus = db('Menu')->select();
+            $this->assign('info', array('pid' => $pid));
+            $menus = $this->menu->all();
             $tree  = new \doc\Tree();
             $menus = $tree->toFormatTree($menus);
             if (!empty($menus)) {
-                $menus = array_merge(array(0 => array('nid' => 0, 'title_show' => '顶级菜单')), $menus);
+                $menus = array_merge(array(0 => array('id' => 0, 'title_show' => '顶级菜单')), $menus);
             } else {
-                $menus = array(0 => array('nid' => 0, 'title_show' => '顶级菜单'));
+                $menus = array(0 => array('id' => 0, 'title_show' => '顶级菜单'));
             }
 
             $data = array(
@@ -75,6 +79,7 @@ class Menu extends Base
                 'keyList' => $this->menu->keyList,
             );
             $this->assign('Menus', $menus);
+            $this->assign($data);
             $this->setMeta('新增菜单');
             return $this->fetch('public/edit');
         }
@@ -93,8 +98,8 @@ class Menu extends Base
         if ($this->request->isPost()) {
             $data = $this->request->param();
             try{
-                $this->menu->save($data, array('nid' => $data['nid']));
-                $this->success('更新成功');
+                $this->menu->save($data, array('nid' => $data['id']));
+                $this->success('更新成功','admin/menu/index');
             }catch (\think\Exception\DbException $e){
                 $this->error('更新失败：'. $e->getMessage());
             }
@@ -107,11 +112,14 @@ class Menu extends Base
             }
             $tree  = new \doc\Tree();
             $menus = $tree->toFormatTree($menus);
-            $menus = array_merge(array(0 => array('nid' => 0, 'title_show' => '顶级菜单')), $menus);
-            $this->assign('Menus', $menus);
-            $this->assign('info', $info);
+            $menus = array_merge(array(0 => array('id' => 0, 'title_show' => '顶级菜单')), $menus);
+            $data = array(
+                'info'    => $info,
+                'keyList' => $this->menu->keyList,
+            );
+            $this->assign($data);
             $this->setMeta('编辑后台菜单');
-            return $this->fetch();
+            return $this->fetch('public/edit');
         }
         return false;
     }
@@ -136,16 +144,17 @@ class Menu extends Base
     /**
      * @title 切换状态
      * @param $id
-     * @param $field
-     * @param int $value
+     * @param $status
+     * @return bool
      */
-    public function toogleStatus($id,$field, $value = 1) {
+    public function ediMenuStatus($id,$status){
         try{
-            $this->menu->where('nid',$id)->setField($field,$value);
-            $this->success('操作成功！');
-        }catch (\think\Exception $e){
-            $this->error('操作失败：'.$e->getMessage());
+            $this->menu->save(['status'=>$status],['id'=>$id]);
+            $this->success("更新成功！");
+        } catch (\think\Exception $e){
+            $this->error('更新失败：'.$e->getMessage());
         }
+        return false;
     }
 
     public function import($pid) {
@@ -207,13 +216,13 @@ class Menu extends Base
 //            //获取排序的数据
 //            $map = array('status' => array('gt', -1));
 //            if (!empty($ids)) {
-//                $map['nid'] = array('in', $ids);
+//                $map['id'] = array('in', $ids);
 //            } else {
 //                if ($pid !== '') {
 //                    $map['pid'] = $pid;
 //                }
 //            }
-//            $list = db('Menu')->where($map)->field('nid,title')->order('sort asc,nid asc')->select();
+//            $list = db('Menu')->where($map)->field('id,title')->order('sort asc,id asc')->select();
 //
 //            $this->assign('list', $list);
 //            $this->setMeta('菜单排序');
@@ -222,7 +231,7 @@ class Menu extends Base
 //            $ids = input('post.ids');
 //            $ids = explode(',', $ids);
 //            foreach ($ids as $key => $value) {
-//                $res = db('Menu')->where(array('nid' => $value))->setField('sort', $key + 1);
+//                $res = db('Menu')->where(array('id' => $value))->setField('sort', $key + 1);
 //            }
 //            if ($res !== false) {
 //                session('admin_menu_list', null);

@@ -11,7 +11,7 @@ namespace app\common\validate;
 
 use think\Validate;
 
-class SysAdmin extends Validate
+class User extends Validate
 {
     protected $rule = array(
         'username'   => 'require|unique:sys_admin',

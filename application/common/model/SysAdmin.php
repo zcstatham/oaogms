@@ -21,7 +21,7 @@ class SysAdmin extends Base
 
     protected $pk = 'sid';
 
-    protected $insert = ['username', 'status' => 0];
+    protected $insert = ['username', 'status' => 1];
 
     public $editfield = array(
         array('name'=>'sid','type'=>'hidden'),
@@ -171,11 +171,8 @@ class SysAdmin extends Base
             $data['salt'] = rand_string(6);
             !isset($data['nickname']) && ($data['nickname'] =  $data['username']);
             !isset($data['avator']) && ($data['avator'] = config('siteinfo.avator'));
-            unset($data['id']);
-            if(validate('SysAdmin')->check($data)){
-                $this->save($data);
-            }
-            return $this->sid;
+            $this->save($data);
+            return $this->id;
         }catch (\think\Exception $e){
             trace('数据库操作失败：' . $e->getMessage(), 'error');
             return false;

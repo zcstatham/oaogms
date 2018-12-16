@@ -1,7 +1,7 @@
 /*
 Navicat MySQL Data Transfer
 
-Source Server         : localhost
+Source Server         : localhost_3306
 Source Server Version : 50505
 Source Host           : localhost:3306
 Source Database       : oaogms
@@ -10,7 +10,7 @@ Target Server Type    : MYSQL
 Target Server Version : 50505
 File Encoding         : 65001
 
-Date: 2018-12-15 19:20:18
+Date: 2018-12-16 21:54:48
 */
 
 SET FOREIGN_KEY_CHECKS=0;
@@ -109,30 +109,29 @@ CREATE TABLE `oao_menu` (
   `sort` int(10) unsigned NOT NULL DEFAULT '0' COMMENT '排序（同级有效）',
   `url` char(255) NOT NULL DEFAULT '' COMMENT '链接地址',
   `hide` tinyint(1) unsigned NOT NULL DEFAULT '0' COMMENT '是否隐藏',
-  `tip` varchar(255) NOT NULL DEFAULT '' COMMENT '提示',
   `group` varchar(50) DEFAULT '' COMMENT '分组',
   `is_dev` tinyint(1) unsigned NOT NULL DEFAULT '0' COMMENT '是否仅开发者模式可见',
   `status` tinyint(1) NOT NULL DEFAULT '0' COMMENT '状态',
   PRIMARY KEY (`nid`)
-) ENGINE=MyISAM AUTO_INCREMENT=15 DEFAULT CHARSET=utf8 COMMENT='菜单管理';
+) ENGINE=MyISAM AUTO_INCREMENT=17 DEFAULT CHARSET=utf8 COMMENT='菜单管理';
 
 -- ----------------------------
 -- Records of oao_menu
 -- ----------------------------
-INSERT INTO `oao_menu` VALUES ('1', '首页', 'admin', 'home', '0', '0', 'admin/index/index', '0', '', '导航', '0', '0');
-INSERT INTO `oao_menu` VALUES ('2', '报表', 'admin', 'publice', '0', '1', 'admin/publice/group', '0', '', '导航', '0', '0');
-INSERT INTO `oao_menu` VALUES ('3', '小程序', 'admin', 'mini', '0', '2', 'admin/mini/index', '0', '', '导航', '0', '0');
-INSERT INTO `oao_menu` VALUES ('4', '系统', 'admin', 'system', '0', '3', 'admin/user/index', '0', '', '导航', '0', '0');
-INSERT INTO `oao_menu` VALUES ('5', '应用中心', 'admin', 'mini-list', '1', '0', 'admin/index/index', '0', '', '首页', '0', '0');
-INSERT INTO `oao_menu` VALUES ('6', '更新缓存', 'admin', 'refresh', '1', '0', 'admin/index/clear', '0', '', '首页', '0', '0');
-INSERT INTO `oao_menu` VALUES ('7', '小程序概况', 'admin', 'cog', '2', '0', 'admin/publice/index', '0', '', '报表', '0', '0');
-INSERT INTO `oao_menu` VALUES ('8', '小程序渠道', 'admin', 'book', '2', '0', 'admin/publice/channel', '0', '', '报表', '0', '0');
-INSERT INTO `oao_menu` VALUES ('9', '自有小程序', 'admin', 'mini', '3', '0', 'admin/mini/index', '0', '', '小程序管理', '0', '0');
-INSERT INTO `oao_menu` VALUES ('10', '渠道小程序', 'admin', 'mini', '3', '0', 'admin/mini/channel', '0', '', '小程序管理', '0', '0');
-INSERT INTO `oao_menu` VALUES ('11', '用户列表', 'admin', 'user', '4', '0', 'admin/user/index', '0', '', '系统管理', '0', '0');
-INSERT INTO `oao_menu` VALUES ('12', '用户组表', 'admin', 'users', '4', '0', 'admin/group/index', '0', '', '系统管理', '0', '0');
-INSERT INTO `oao_menu` VALUES ('13', '菜单列表', 'admin', 'th-list', '4', '0', 'admin/menu/index', '0', '', '系统管理', '0', '0');
-INSERT INTO `oao_menu` VALUES ('14', '权限列表', 'admin', 'paw', '4', '0', 'admin/group/access', '0', '', '系统管理', '0', '0');
+INSERT INTO `oao_menu` VALUES ('1', '首页', 'admin', 'home', '0', '0', 'admin/index/index', '0', '导航', '0', '1');
+INSERT INTO `oao_menu` VALUES ('2', '报表', 'admin', 'publice', '0', '1', 'admin/publice/group', '0', '导航', '0', '0');
+INSERT INTO `oao_menu` VALUES ('3', '小程序', 'admin', 'mini', '0', '2', 'admin/mini/index', '0', '导航', '0', '0');
+INSERT INTO `oao_menu` VALUES ('4', '系统', 'admin', 'system', '0', '3', 'admin/user/index', '0', '导航', '0', '0');
+INSERT INTO `oao_menu` VALUES ('5', '应用中心', 'admin', 'mini-list', '1', '0', 'admin/index/index', '0', '首页', '0', '0');
+INSERT INTO `oao_menu` VALUES ('6', '更新缓存', 'admin', 'refresh', '1', '0', 'admin/index/clear', '0', '首页', '0', '0');
+INSERT INTO `oao_menu` VALUES ('7', '小程序概况', 'admin', 'cog', '2', '0', 'admin/publice/index', '0', '报表', '0', '0');
+INSERT INTO `oao_menu` VALUES ('8', '小程序渠道', 'admin', 'book', '2', '0', 'admin/publice/channel', '0', '报表', '0', '0');
+INSERT INTO `oao_menu` VALUES ('9', '自有小程序', 'admin', 'mini', '3', '0', 'admin/mini/index/type/own.html', '0', '小程序管理', '0', '1');
+INSERT INTO `oao_menu` VALUES ('10', '渠道小程序', 'admin', 'mini', '3', '0', 'admin/mini/index/type/channel.html', '0', '小程序管理', '0', '1');
+INSERT INTO `oao_menu` VALUES ('11', '用户列表', 'admin', 'user', '4', '0', 'admin/user/index', '0', '系统管理', '0', '0');
+INSERT INTO `oao_menu` VALUES ('12', '用户组表', 'admin', 'users', '4', '0', 'admin/group/index', '0', '系统管理', '0', '0');
+INSERT INTO `oao_menu` VALUES ('13', '菜单列表', 'admin', 'th-list', '4', '0', 'admin/menu/index', '0', '系统管理', '0', '0');
+INSERT INTO `oao_menu` VALUES ('14', '权限列表', 'admin', 'paw', '4', '0', 'admin/group/access', '0', '系统管理', '0', '0');
 
 -- ----------------------------
 -- Table structure for oao_mini
@@ -143,16 +142,17 @@ CREATE TABLE `oao_mini` (
   `name` char(30) NOT NULL DEFAULT '' COMMENT '小程序名称',
   `type` tinyint(2) unsigned NOT NULL DEFAULT '1' COMMENT '类型：1.小程序，2.小游戏',
   `appid` char(80) NOT NULL DEFAULT '' COMMENT '小程序appid',
-  `sid` int(11) DEFAULT NULL COMMENT '小程序渠道商id',
+  `sid` int(11) DEFAULT '1' COMMENT '小程序渠道商id',
   `status` char(12) NOT NULL DEFAULT '' COMMENT '渠道小程序id,例：+mid 申请, mid已绑定,-mid:已解绑,null',
   `remark` char(140) NOT NULL DEFAULT '' COMMENT '小程序描述',
   `create_timestamp` datetime NOT NULL COMMENT '创建时间',
   PRIMARY KEY (`mid`)
-) ENGINE=MyISAM AUTO_INCREMENT=2 DEFAULT CHARSET=utf8 ROW_FORMAT=DYNAMIC COMMENT='小程序表';
+) ENGINE=MyISAM AUTO_INCREMENT=3 DEFAULT CHARSET=utf8 ROW_FORMAT=DYNAMIC COMMENT='小程序表';
 
 -- ----------------------------
 -- Records of oao_mini
 -- ----------------------------
+INSERT INTO `oao_mini` VALUES ('2', 'sadfas', '0', 'dafasd', '1', '', 'asdfasd', '2018-12-16 21:52:11');
 
 -- ----------------------------
 -- Table structure for oao_mini_action_log
@@ -209,13 +209,13 @@ CREATE TABLE `oao_sys_admin` (
   `status` tinyint(4) NOT NULL DEFAULT '0' COMMENT '账号状态',
   `create_timestamp` datetime NOT NULL COMMENT '注册时间',
   PRIMARY KEY (`sid`)
-) ENGINE=MyISAM AUTO_INCREMENT=7 DEFAULT CHARSET=utf8 COMMENT='系统用户表';
+) ENGINE=MyISAM AUTO_INCREMENT=3 DEFAULT CHARSET=utf8 COMMENT='系统用户表';
 
 -- ----------------------------
 -- Records of oao_sys_admin
 -- ----------------------------
 INSERT INTO `oao_sys_admin` VALUES ('1', 'admin', '11910e5e47b10789832cf91c53307ca2', '超级管理员', '/static/images/avatar-1.jpg', '578322713@qq.com', '18535318830', 'oaogms', '1', '1', '2018-12-14 19:04:11');
-INSERT INTO `oao_sys_admin` VALUES ('6', 'test', '67a882e7f54a1ffb531f8d979f455aa7', 'test', '/static/images/avatar-1.jpg', '456483213@qq.com', '18531311123', 'KrLVoc', '0', '1', '2018-12-15 15:49:38');
+INSERT INTO `oao_sys_admin` VALUES ('2', 'test', '67a882e7f54a1ffb531f8d979f455aa7', 'test', '/static/images/avatar-1.jpg', '456483213@qq.com', '18531311123', 'KrLVoc', '0', '1', '2018-12-15 15:49:38');
 
 -- ----------------------------
 -- Table structure for oao_user
