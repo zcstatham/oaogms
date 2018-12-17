@@ -29,6 +29,11 @@ class User extends Base
         $list = $this->model
             ->where($map)->order($order)
             ->paginate(config('siteinfo.list_rows'), false);
+        foreach ($list as $item){
+            if($item->groupId && $item->groupId->groupInfo->title){
+                $item['group_name'] = $item->groupId->groupInfo->title;
+            }
+        }
         $data = array(
             'list' => $list,
             'page' => $list->render(),
@@ -90,6 +95,7 @@ class User extends Base
             if (!$info) {
                 $this->error('不存在此用户！');
             }
+            $this->model->keyList[1]['type'] = 'readonly';
             $data = array(
                 'info' => $info,
                 'keyList' => $this->model->editfield,
@@ -167,26 +173,24 @@ class User extends Base
      * @throws \think\db\exception\ModelNotFoundException
      * @throws \think\exception\DbException
      */
-    private function authUser($mid)
+    public function authUser($id)
     {
         $access = model('AuthGroupAccess');
         $group = model('AuthGroup');
         if ($this->request->isPost()) {
-            $uid = input('sid', '', 'trim,intval');
-            $access->where('sid', $uid)->delete();
-            $group_id = input('gid', '', 'trim,intval');
-            if ($group_id) {
+            $data = $this->request->param();
+            $access->where('uid', $data['id'])->delete();
+            if ( $data['id']) {
                 $add = array(
-                    'sid' => $uid,
-                    'group_id' => $group_id,
+                    'uid' => $data['id'],
+                    'group_id' => $data['admin'],
                 );
-                $access->save($add);
+                $result = $access->save($add);
             }
-            $this->success("设置成功！");
+            $result && $this->success("设置成功！",'admin/user/index');
         } else {
-            $uid = input('id', '', 'trim,intval');
             $row = $group->all();
-            $auth = $access->where(array('uid' => $uid))->select();
+            $auth = $access->where(array('uid' => $id))->select();
             $auth_list = array();
             foreach ($auth as $key => $value) {
                 $auth_list[] = $value['group_id'];
@@ -195,7 +199,7 @@ class User extends Base
                 $list[$value['module']][] = $value;
             }
             $data = array(
-                'uid' => $uid,
+                'userInfo' => $this->model->get($id),
                 'auth_list' => $auth_list,
                 'list' => $list,
             );

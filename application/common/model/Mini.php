@@ -17,6 +17,7 @@ class Mini extends Base
     protected $pk = 'mid';
 
     public $keyList = array(
+        array('name'=>'id','title'=>'序号','type'=>'hidden'),
         array('name'=>'name','title'=>'名称','type'=>'text','help'=>''),
         array('name'=>'type','title'=>'类型','type'=>'radio','option'=>array('1'=>'小程序','0'=>'小游戏'),'help'=>''),
         array('name'=>'appid','title'=>'appId','type'=>'text','help'=>''),

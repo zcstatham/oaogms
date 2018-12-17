@@ -1,0 +1,55 @@
+{extend name="public/base" /}
+{block name="style"}
+<style>
+	.table td, .table th {
+		vertical-align: middle;
+		text-align: center;
+		overflow: auto;
+	}
+	.table td:first-child, .table th:first-child{
+		min-width: 100px;
+	}
+</style>
+{/block}
+{block name="body"}
+<div class="content-inner">
+	<!--***** CONTENT *****-->
+	<form method="post" class="form form-horizontal content-inner chart-cont">
+		<table class="table table-striped">
+			<thead>
+			<tr class="bg-info text-white">
+				<th>模块</th>
+				<th class="text-center">用户组</th>
+			</tr>
+			</thead>
+			<tbody>
+            <tr><td colspan="2"><img src="{$userInfo.avator}" alt="" width="38"> <span class="h4 mt-0 ml-3 red">{$userInfo.nickname}</span></td></tr>
+			{volist name="list" id="group"}
+			{php}$index= $key{/php}
+			<tr>
+				<td class="">{$index}</td>
+				<td class="text-left">
+					{volist name="group" id="item"}
+					<label class="custom-control custom-radio mb-2 mr-sm-2">
+					   <input class="custom-control-input" type="radio" name="{$index}"
+					   id="{$index}-{$item.id}" value="{$item.id}"
+					   checked="{$item.id | in_array=$auth_list }"/>
+					    <span class="custom-control-indicator"></span>
+					    <span class="custom-control-description pl-sm-2">{$item.title}</span>
+					</label>
+					{/volist}
+				</td>
+			</tr>
+			{/volist}
+			</tbody>
+		</table>
+		<div class="form-group">
+			<div class="text-center">
+				<input type="hidden" name="id" value="{$sid|default=''}">
+				<button class="btn btn-general btn-blue mr-2" type="submit" target-form="form-horizontal">确 定</button>
+				<button class="btn btn-general btn-white" onclick="javascript:history.back(-1);return false;">返 回</button>
+			</div>
+		</div>
+	</form>
+</div>
+{/block}

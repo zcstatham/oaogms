@@ -28,12 +28,12 @@ CREATE TABLE `oao_auth_group` (
   `status` tinyint(1) NOT NULL DEFAULT '1' COMMENT '用户组状态：为1正常，为0禁用,-1为删除',
   `rules` varchar(500) NOT NULL DEFAULT '' COMMENT '用户组拥有的规则id，多个规则 , 隔开',
   PRIMARY KEY (`id`)
-) ENGINE=MyISAM AUTO_INCREMENT=2 DEFAULT CHARSET=utf8;
+) ENGINE=MyISAM AUTO_INCREMENT=9 DEFAULT CHARSET=utf8;
 
 -- ----------------------------
 -- Records of oao_auth_group
 -- ----------------------------
-INSERT INTO `oao_auth_group` VALUES ('1', 'admin', '', '运营你大约', '运营管理', '1', '16,21,26,31,36');
+INSERT INTO `oao_auth_group` VALUES ('1', 'admin', 'admin', '运营你大约', '运营管理', '1', '16,21,26,31,36');
 
 -- ----------------------------
 -- Table structure for oao_auth_group_access

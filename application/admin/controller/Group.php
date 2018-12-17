@@ -167,7 +167,7 @@ class Group extends Base
             );
             $this->assign($data);
             $this->setMeta('授权');
-            return $this->fetch('group/auth');
+            return $this->fetch('group/authusergroup');
         }
         return false;
     }

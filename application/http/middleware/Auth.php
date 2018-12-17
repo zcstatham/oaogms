@@ -27,7 +27,7 @@ class Auth
                     $dynamic = $this->checkDynamic(); //检测分类栏目有关的各项动态权限
                     if ($dynamic === null) {
                         //检测访问权限
-                        if (!$this->checkRule($this->url_path, array('in', '1,2'))) {
+                        if (!$this->checkRule($this->url_path, '1,2')) {
                             $this->error('未授权访问!','/login');
                         } else {
                             // 检测分类及内容有关的各项动态权限
@@ -84,7 +84,7 @@ class Auth
         $row = db('menu')->field('nid,title,url,icon,"" as style')->where($map)->order('sort asc')->select();
         foreach ($row as $key => $value) {
             //此处用来做权限判断
-            if (IS_ROOT || $this->checkRule($value['url'], 2, null) || 'test') {
+            if (IS_ROOT || $this->checkRule($value['url'], 2, null)) {
                 if ($controller == $value['url']) {
                     $value['style'] = "active";
                 }

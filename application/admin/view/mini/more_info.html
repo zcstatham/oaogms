@@ -1,0 +1,102 @@
+{extend name="public/base" /}
+{block name="style"}
+<!-- Core stylesheets -->
+<link rel="stylesheet" href="__CSS__/ui-elements/button.css">
+<style>
+    .table td, .table th {
+        vertical-align: middle;
+        text-align: center;
+        overflow: auto;
+    }
+
+    .btn.focus, .btn:focus{
+        outline: 0;
+        box-shadow: initial;
+    }
+
+    .table .btn{
+        width: auto;
+        margin: 0;
+        font-size: 0.9rem;
+        line-height: initial;
+        border-radius: 5px;
+    }
+    .list-group{
+        margin-bottom: 3rem;
+    }
+    .list-group-item{
+        color: #777;
+        border-width: 0;
+        border-bottom-width: 1px;
+        margin-bottom: 0;
+        background-color: transparent;
+    }
+    .list-group-item span{
+        display: inline-block;
+        margin-right: 2rem;
+        font-weight: 800;
+    }
+    .list-group-item span:first-child{
+        min-width: 5rem;
+        text-align: right;
+        font-weight: normal;
+    }
+</style>
+{/block}
+{block name="body"}
+<div class="content-inner">
+    <div class="content-inner chart-cont">
+        <div class="row">
+            <div class="col-md-12">
+                <ul class="list-group">
+                    <li class="list-group-item"><span class="label">名称:</span><span>{$list['name']}</span></li>
+                    <li class="list-group-item"><span class="label">类型:</span><span>{$list['type']}</span></li>
+                    <li class="list-group-item"><span class="label">AppID:</span><span>{$list['appid']}</span></li>
+                    <li class="list-group-item"><span class="label">备注:</span><span>{$list['remark']}</span></li>
+                    <li class="list-group-item"><span class="label">创建时间:</span><span>{$list['create_timestamp']}</span></li>
+                </ul>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-12">
+                {volist name="bind" id="list"}
+                <div class="panel panel-default">
+                    <div class="panel-heading">
+                        <h5 class="panel-title"><strong>{$list['title']}小程序</strong></h5>
+                    </div>
+                    <div class="panel-body">
+                        <div class="table-responsive">
+                            <table class="table borderless">
+                                <thead>
+                                <tr class="bg-info text-white">
+                                    <td class="text-right"><strong>名称</strong></td>
+                                    <td class="text-center"><strong>类型</strong></td>
+                                    <td class="text-center"><strong>AppID</strong></td>
+                                    <td class="text-center"><strong>渠道商</strong></td>
+                                    <td class="text-center"><strong>操作</strong></td>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                {volist name="list['list']" id="item" empty="暂时没有数据" }
+                                <tr>
+                                    <td class="text-right">{$item['name']}</td>
+                                    <td class="text-center">{$item['type']}</td>
+                                    <td class="text-center">{$item['appid']}</td>
+                                    <td class="text-center">{$item['sid']}</td>
+                                    <td class="text-center">
+                                        <a href="{:url('admin/mini/bindMini',array('id'=>$item['id']))}" class="btn btn-link blue">绑定</a>
+                                        <a href="{:url('admin/mini/refuse', array('id'=>$item['id']))}" class="btn btn-link blue">取消</a>
+                                    </td>
+                                </tr>
+                                {/volist}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                {/volist}
+            </div>
+        </div>
+    </div>
+</div>
+{/block}

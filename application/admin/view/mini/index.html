@@ -31,7 +31,7 @@
     }
 
     /*.table tr a.text-item:hover {*/
-        /*background: #f5f5f5;*/
+    /*background: #f5f5f5;*/
     /*}*/
 
     .table tr a.text-item:active {
@@ -66,7 +66,7 @@
     <div class="content-inner chart-cont">
         <!--***** CONTENT *****-->
         <div class="top-option third-button container">
-            <a href="{:url('admin/user/addUser')}" class="btn btn-outline-primary">+ 添加用户</a>
+            <a href="{:url('admin/mini/addMini')}" class="btn btn-outline-primary">+ 添加小程序</a>
         </div>
         <hr>
         <div class="container">
@@ -74,38 +74,27 @@
                 <thead>
                 <tr class="bg-info text-white">
                     <th>序号</th>
-                    <th>用户名</th>
-                    <th>用户组</th>
-                    <th>昵称</th>
-                    <th>手机号码</th>
-                    <th>用户状态</th>
+                    <th>名称</th>
+                    <th>类型</th>
+                    <th>AppId</th>
                     <th>操作</th>
                 </tr>
                 </thead>
                 <tbody>
                 {volist name='list' id='item' key="index" }
                 <tr class="table-{/*$index%2==0?'info':'success'*/}">
-                    <th scope="row">{$index}</th>
-                    <td><a rel="nofollow" href="#" class="text-item d-flex">{$item.username}</a></td>
-                    <td><a rel="nofollow" href="#" class="text-item d-flex">{$item.group_name|default=''}</a></td>
-                    <td><a rel="nofollow" href="#" class="text-item d-flex">
-                        <div class="msg-profile"> <img src="{$item.avator}" alt="..." class="img-fluid rounded-circle"></div>
-                        <div class="msg-body">
-                            <h3 class="h5">{$item.nickname}</h3><span>{$item.email}</span>
-                        </div>
-                    </a></td>
-                    <td><a rel="nofollow" href="#" class="text-item d-flex">{$item.mobile}</a></td>
+                    <th scope="row">{$index+($list::getCurrentPage()-1)*config('siteinfo.list_rows')}</th>
+                    <td><a rel="nofollow" href="#" class="text-item d-flex">{$item.name}</a></td>
+                    <td><a rel="nofollow" href="#" class="text-item d-flex">{$item.appid}</a></td>
+                    <td><a rel="nofollow" href="#" class="text-item d-flex">{$item.remark}</a></td>
                     <td class="first-button">
-                        {if $item.status == '1'}
-                        <a href="{:url('admin/user/editUserStatus', array('id'=>$item['id'],'status'=>0))}" class="btn btn-link red">禁用</a>
-                        {else /}
-                        <a href="{:url('admin/user/editUserStatus', array('id'=>$item['id'],'status'=>1))}" class="btn btn-link blue">启用</a>
+                        {if $item.sid == 1 && $group == 1}
+                        <a href="{:url('admin/group/moreInfo',array('id'=>$item['id']))}" class="btn btn-link blue">详细</a>
+                        {elseif $item.sid == 1}
+                        <a href="{:url('admin/group/applyBind',array('id'=>$item['id']))}" class="btn btn-link blue">申请</a>
                         {/if}
-                    </td>
-                    <td class="first-button">
-                        <a href="{:url('admin/user/authUser',array('id'=>$item['id']))}" class="btn btn-link blue">授权</a>
-                        <a href="{:url('admin/user/editUser',array('id'=>$item['id']))}" class="btn btn-link blue">编辑</a>
-                        <a href="{:url('admin/user/delUser', array('id'=>$item['id']))}" class="btn btn-link blue">删除</a>
+                        <a href="{:url('admin/group/editMini',array('id'=>$item['id']))}" class="btn btn-link blue">编辑</a>
+                        <a href="{:url('admin/group/delMini', array('id'=>$item['id']))}" class="btn btn-link blue">删除</a>
                     </td>
                 </tr>
                 {/volist}

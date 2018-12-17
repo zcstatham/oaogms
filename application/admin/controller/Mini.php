@@ -13,56 +13,84 @@ class Mini extends Base
 {
 
     protected $model;
+    protected $miniGroup;
 
-    protected $beforeActionList=['beforeMethod'];
+    protected $beforeActionList = ['beforeMethod'];
 
-    protected function beforeMethod(){
+    protected function beforeMethod()
+    {
         $this->model = model('Mini');
-    }
-
-    public function index(){
-        return $this->miniList();
+        $this->miniGroup = getMiniGroup();
     }
 
     /**
      * @title 小程序列表
      * @return mixed
      */
-    public function miniList($type ='own') {
-        $map = [];
-        $order = ['mid'=>'desc'];
-        if(!IS_ROOT){
-            $map['sid'] = session('user_auth.sid');
-            if($type == 'channel'){
-                $map['sid'] = 1;
-            }
+    public function index()
+    {
+        return $this->miniList();
+    }
+
+    /**
+     * @title 自有小程序
+     * @return mixed
+     */
+    public function own()
+    {
+        return $this->miniList('own');
+    }
+
+    /**
+     * @title 渠道小程序
+     * @return mixed
+     */
+    public function channel()
+    {
+        return $this->miniList('channel');
+    }
+
+    private function miniList($type = 'own')
+    {
+        $map = array(
+            'sid' => $this->miniGroup
+        );
+        $order = ['mid' => 'desc'];
+        if ($type == 'channel' && $this->miniGroup != 1) {
+            $map = array(
+                'sid' => 1
+            );
+        } else if ($type == 'channel') {
+            $map = array(['sid', '<>', 1]);
         }
         $list = $this->model->where($map)->order($order)->paginate(config('siteinfo.list_rows'), false);
         $data = array(
+            'group' => $this->miniGroup,
             'list' => $list,
             'page' => $list->render(),
-            'keyList'=>$this->model->keyList
+            'keyList' => $this->model->keyList
         );
         $this->setMeta('小程序列表');
         $this->assign($data);
-        return $this->fetch('public/list');
+        return $this->fetch('mini/index');
     }
 
     /**
      * @title 新增小程序
      * @author yangweijie <yangweijiester@gmail.com>
      */
-    public function addMini(){
+    public function addMini()
+    {
         if ($this->request->isPost()) {
             $data = $this->request->param();
-            $data['sid'] = session('user_auth.sid');
-            $group = model('AuthGroupAccess')->where('uid',$data['sid'])->field('group_id')->find();
-            if($group&&in_array($group,config('admin_group'))){
-                $data['sid'] = 1;
+            $data['sid'] = $this->miniGroup;
+            $valid = $this->validate($data,'Mini');
+            if($valid!== true){
+                $this->error('验证失败：'.$valid);
             }
-            $this->model->save($data);
-            if($this->model){
-                $this->success('新增成功','admin/mini/index');
+            $result = $this->model->save($data);
+            if ($result) {
+                $this->success('新增成功', 'admin/mini/index');
             } else {
                 $this->error('新增失败');
             }
@@ -85,23 +113,24 @@ class Mini extends Base
      * @throws \think\db\exception\ModelNotFoundException
      * @throws \think\exception\DbException
      */
-    public function editMini($id = 0) {
+    public function editMini($id = 0)
+    {
         if ($this->request->isPost()) {
             $data = $this->request->param();
-            try{
+            try {
                 $this->model->save($data, array('mid' => $data['id']));
-                $this->success('更新成功','admin/mini/index');
-            }catch (\think\Exception\DbException $e){
-                $this->error('更新失败：'. $e->getMessage());
+                $this->success('更新成功', 'admin/mini/index');
+            } catch (\think\Exception\DbException $e) {
+                $this->error('更新失败：' . $e->getMessage());
             }
         } else {
-            try{
-                $info  = $this->model->get($id);
-            }catch (\think\Exception $e){
-                $this->error('获取后台小程序信息错误：'.$e->getMessage());
+            try {
+                $info = $this->model->get($id);
+            } catch (\think\Exception $e) {
+                $this->error('获取后台小程序信息错误：' . $e->getMessage());
             }
             $data = array(
-                'info'    => $info,
+                'info' => $info,
                 'keyList' => $this->model->keyList,
             );
             $this->assign($data);
@@ -115,11 +144,12 @@ class Mini extends Base
      * @title 删除小程序
      * @param $id
      */
-    public function delMini ($id) {
+    public function delMini($id)
+    {
         if (empty($id)) {
             $this->error('请选择要操作的数据!');
         }
-        if ($this->model->where('mid',$id)->delete()) {
+        if ($this->model->where('mid', $id)->delete()) {
             $this->success('删除成功');
         } else {
             $this->error('删除失败！');
@@ -132,18 +162,67 @@ class Mini extends Base
      * @param $status
      * @return bool
      */
-    public function bindMini($id,$status){
+    public function bindMini($id, $status)
+    {
         //绑定小程序
         return false;
     }
 
     /**
+     * @title 申请绑定小程序
+     * @param $id
+     * @return bool
+     */
+    public function applyBind($id)
+    {
+        //绑定小程序
+        return false;
+    }
+
+
+    /**
      * @title 小程序详细信息
      * @return bool
      */
-    public function moreInfo(){
+    public function moreInfo($id)
+    {
         //小程序信息
-        //小程序绑定列表;
-        return false;
+        $list = $this->model->cache(true)->get($id);
+        $bind = $list['status'];
+        if($bind) {
+            foreach ($bind as $mid) {
+                $ids[] = abs($mid);
+            }
+            $bindInfo = $this->model->all($ids);
+            foreach ($bindInfo as $key => $mini) {
+                if (in_array('-' . $mini['id'], $mid, true)) {
+                    $unbind[] = $mini;
+                } else if (in_array('+' . $mini['id'], $mid, true)) {
+                    $bind[] = $mini;
+                } else if (in_array('' . $mini['id'], $mid, true)) {
+                    $binding[] = $mini;
+                }
+            }
+            $data=array(
+                'list'=>$list,
+                'bind'=>array(
+                    array('title'=>'申请中', 'list'=>$binding),
+                    array('title'=>'已绑定', 'list'=>$bind),
+                    array('title'=>'已解绑', 'list'=>$unbind)
+                )
+            );
+        }else {
+            $data=array(
+                'list'=>$list,
+                'bind'=>array(
+                    array('title'=>'申请中', 'list'=>[]),
+                    array('title'=>'已绑定', 'list'=>[]),
+                    array('title'=>'已解绑', 'list'=>[])
+                )
+            );
+        }
+        $this->setMeta('小程序详细信息');
+        $this->assign($data);
+        return $this->fetch();
     }
 }

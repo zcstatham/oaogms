@@ -58,6 +58,11 @@ class SysAdmin extends Base
         return $data['id'];
     }
 
+    public function groupId()
+    {
+        return $this->hasOne('AuthGroupAccess','uid','sid');
+    }
+
     /**
      * username查询器
      * @param Model $query

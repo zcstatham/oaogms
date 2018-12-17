@@ -11,5 +11,8 @@ namespace app\common\model;
 
 class AuthGroupAccess extends Base
 {
-
+    public function groupInfo()
+    {
+        return $this->hasOne('AuthGroup','id','group_id');
+    }
 }

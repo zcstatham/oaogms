@@ -59,11 +59,14 @@
     .table tr .msg-body{
         text-align:left;
     }
+    .chart-cont .container{
+        margin-left: 0;
+    }
 </style>
 {/block}
 {block name="body"}
 <div class="content-inner">
-    <div class="container chart-cont">
+    <div class="chart-cont">
         <!--***** CONTENT *****-->
         <div class="top-option third-button container">
             {if (($options = array_slice($keyList,-1,1)[0])['name'] == 'options') and ($options['option']['top'] != '') }
@@ -77,9 +80,10 @@
             <table class="table table-hover">
                 <thead>
                 <tr class="bg-info text-white">
-                    <th>序号</th>
                     {volist name='keyList' id='field'}
+                    {if !in_array($field.type,['password'])}
                         <th>{$field.title}</th>
+                    {/if}
                     {/volist}
                 </tr>
                 </thead>
@@ -90,7 +94,7 @@
                     <th scope="row">{$index+($list::getCurrentPage()-1)*config('siteinfo.list_rows')}</th>
                     {/if}
                     {volist name="keyList" id="field"}
-                        {switch $field['type'] }
+                        {switch $field['type']}
                             {case select }
                                 <td class="first-button"><a href="{:url($field.option.url, array('id'=>$item['id'],'status'=>(int)!$item['status']))}" class="btn btn-link {$item['status']?'blue':'red'}">{$field['option'][(int)!$item['status']]}</a></td>
                             {/case}
@@ -105,6 +109,8 @@
                                 {if $field['name']!='id'}
                                 <td><a rel="nofollow" href="#" class="text-item d-flex">{$item[$field.name]}</a></td>
                                 {/if}
+                            {/case}
+                            {case password}
                             {/case}
                             {case radio}
                                 <td><a rel="nofollow" href="#" class="text-item d-flex">{$field['option'][$item[$field.name]]}</a></td>

@@ -189,7 +189,7 @@ class Auth{
         /*适用于TP5.1*/
         $map=[
             ['id','in',$ids],
-            ['type','=',$type],
+            ['type','in',$type],
             ['status','=',1]
         ];
 
