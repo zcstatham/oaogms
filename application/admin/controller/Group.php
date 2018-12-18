@@ -8,7 +8,11 @@
 
 namespace app\admin\controller;
 
-
+/**
+ * Class Group
+ * @title 权限用户组
+ * @package app\admin\controller
+ */
 class Group extends Base
 {
 

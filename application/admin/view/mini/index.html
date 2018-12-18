@@ -59,6 +59,10 @@
     .table tr .msg-body{
         text-align:left;
     }
+
+    .table tr.show{
+        background: #0c5460;
+    }
 </style>
 {/block}
 {block name="body"}
@@ -80,21 +84,20 @@
                     <th>操作</th>
                 </tr>
                 </thead>
-                <tbody>
+                <tbody class="panel-heading">
                 {volist name='list' id='item' key="index" }
-                <tr class="table-{/*$index%2==0?'info':'success'*/}">
-                    <th scope="row">{$index+($list::getCurrentPage()-1)*config('siteinfo.list_rows')}</th>
+                <tr>
+                    <th scope="row">
+                        <!--<span class="mr-1"><i class="fa fa-plus"></i></span>-->
+                        {$index+($list::getCurrentPage()-1)*config('siteinfo.list_rows')}
+                    </th>
                     <td><a rel="nofollow" href="#" class="text-item d-flex">{$item.name}</a></td>
                     <td><a rel="nofollow" href="#" class="text-item d-flex">{$item.appid}</a></td>
                     <td><a rel="nofollow" href="#" class="text-item d-flex">{$item.remark}</a></td>
                     <td class="first-button">
-                        {if $item.sid == 1 && $group == 1}
-                        <a href="{:url('admin/group/moreInfo',array('id'=>$item['id']))}" class="btn btn-link blue">详细</a>
-                        {elseif $item.sid == 1}
-                        <a href="{:url('admin/group/applyBind',array('id'=>$item['id']))}" class="btn btn-link blue">申请</a>
-                        {/if}
-                        <a href="{:url('admin/group/editMini',array('id'=>$item['id']))}" class="btn btn-link blue">编辑</a>
-                        <a href="{:url('admin/group/delMini', array('id'=>$item['id']))}" class="btn btn-link blue">删除</a>
+                        <a href="{:url('admin/mini/moreInfo',array('id'=>$item['id']))}" class="btn btn-link blue">详细</a>
+                        <a href="{:url('admin/mini/editMini',array('id'=>$item['id']))}" class="btn btn-link blue">编辑</a>
+                        <a href="{:url('admin/mini/delMini', array('id'=>$item['id']))}" class="btn btn-link blue">删除</a>
                     </td>
                 </tr>
                 {/volist}

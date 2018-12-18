@@ -48,6 +48,7 @@ class AuthRule extends Base
 
     public function updateRule($type){
         $path =  Env::get('app_path') . $type . '/controller';
+        //控制器类文件
         $classname = $this->scanFile($path);
         foreach ($classname as $value) {
             $class = "\\app\\" . $type . "\\controller\\" . $value;

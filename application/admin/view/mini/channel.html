@@ -1,0 +1,65 @@
+{extend name="public/base" /}
+{block name="style"}
+<!-- Core stylesheets -->
+<link rel="stylesheet" href="__CSS__/ui-elements/card.css">
+<style>
+    #card-2 .btn {
+        border-radius: 5px;
+        width: 70px;
+    }
+    select{
+        text-align: center;
+        text-align-last: center;
+    }
+</style>
+{/block}
+{block name="body"}
+<div class="content-inner">
+    <div class="content-inner chart-cont">
+        <div class="row" id="card-2">
+            {volist name="list" id="item" empty="暂无未绑小程序" }
+            <div class="col-lg-3 col-sm-6">
+                <div class="card hovercard">
+                    <div class="cardheader"></div>
+                    <div class="avatar">
+                        <img alt="" src="__IMG__/mini_icon.png">
+                    </div>
+                    <form class="info" action="{:url('admin/mini/bindMini')}" id="mini-{$item['id']}">
+                        <input type="hidden" name="id" value="{$item['id']}">
+                        <div class="title">
+                            <a target="_blank" href="javascript:void(0);">{$item['name']}</a>
+                        </div>
+                        <div class="form-group">
+                            <label for="exampleSelect1">{$group==1?'渠道商小程序列表':'OAO小程序列表'}</label>
+                            <select class="form-control" name="bindid" id="exampleSelect1">
+                                <option value="-1">——请选择小程序——</option>
+                                {volist name="own" id="ownlist"}
+                                <option value="{$ownlist['mid']}" disabled="{$ownlist['mid']|in_array = $ownlist['bindList']}">
+                                    {$ownlist['name']}
+                                </option>
+                                {/volist}
+                            </select>
+                        </div>
+                    </form>
+                    <div class="bottom">
+                        <!--<small>Last updated 3 mins ago</small>-->
+                        <button class="btn btn-info float-right btn-sm" disabled type="submit" form="mini-{$item['id']}">绑定</button>
+                    </div>
+                </div>
+            </div>
+            {/volist}
+        </div>
+    </div>
+</div>
+{/block}
+{block name="script"}
+<script>
+    $('select').change(function(){
+        var $btn = $(this).closest('.card').find('button');
+        if($(this).val() == '-1')
+            $btn.attr('disabled',true);
+        else
+            $btn.attr('disabled',false);
+    });
+</script>
+{/block}

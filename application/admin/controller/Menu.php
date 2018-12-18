@@ -8,7 +8,11 @@
 
 namespace app\admin\controller;
 
-
+/**
+ * Class Menu
+ * @title 菜单
+ * @package app\admin\controller
+ */
 class Menu extends Base
 {
 

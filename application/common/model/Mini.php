@@ -41,4 +41,14 @@ class Mini extends Base
     protected function setIdAttr($value, $data){
         return $data['id'];
     }
+
+    public function channelInfo()
+    {
+        return $this->hasOne('SysAdmin','sid','sid');
+    }
+
+    public function bindInfo()
+    {
+        return $this->hasMany('MiniExtend','mid','mid');
+    }
 }

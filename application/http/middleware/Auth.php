@@ -19,27 +19,33 @@ class Auth
             // 是否是超级管理员
             define('IS_ROOT', is_administrator());
             // 检测系统权限
+            $authstatus = true;
             if (!IS_ROOT) {
                 $access = $this->accessControl($request);
                 if (false === $access) {
-                    $this->error('403:禁止访问','/login');
+                    $authstatus = false;
                 } elseif (null === $access) {
                     $dynamic = $this->checkDynamic(); //检测分类栏目有关的各项动态权限
                     if ($dynamic === null) {
                         //检测访问权限
                         if (!$this->checkRule($this->url_path, '1,2')) {
-                            $this->error('未授权访问!','/login');
+                            $authstatus = false;
                         } else {
                             // 检测分类及内容有关的各项动态权限
                             $dynamic = $this->checkDynamic();
                             if (false === $dynamic) {
-                                $this->error('未授权访问!','/login');
+                                $authstatus = false;
                             }
                         }
                     } elseif ($dynamic === false) {
-                        $this->error('未授权访问!','/login');
+                        $authstatus = false;
                     }
                 }
+            }
+            if(!$authstatus && $request->header('referer') ){
+                $this->error('未授权访问!',$request->header('referer'));
+            }else if(!$authstatus){
+                $this->error('未授权访问!','/login');
             }
             $this->setMenu($request);
         }

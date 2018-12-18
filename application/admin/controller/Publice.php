@@ -8,7 +8,11 @@
 
 namespace app\admin\controller;
 
-
+/**
+ * Class Publice
+ * @title 报表
+ * @package app\admin\controller
+ */
 class Publice extends Base
 {
     public function index(){

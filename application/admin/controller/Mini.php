@@ -8,7 +8,11 @@
 
 namespace app\admin\controller;
 
-
+/**
+ * Class Mini
+ * @title 小程序
+ * @package app\admin\controller
+ */
 class Mini extends Base
 {
 
@@ -29,41 +33,7 @@ class Mini extends Base
      */
     public function index()
     {
-        return $this->miniList();
-    }
-
-    /**
-     * @title 自有小程序
-     * @return mixed
-     */
-    public function own()
-    {
-        return $this->miniList('own');
-    }
-
-    /**
-     * @title 渠道小程序
-     * @return mixed
-     */
-    public function channel()
-    {
-        return $this->miniList('channel');
-    }
-
-    private function miniList($type = 'own')
-    {
-        $map = array(
-            'sid' => $this->miniGroup
-        );
-        $order = ['mid' => 'desc'];
-        if ($type == 'channel' && $this->miniGroup != 1) {
-            $map = array(
-                'sid' => 1
-            );
-        } else if ($type == 'channel') {
-            $map = array(['sid', '<>', 1]);
-        }
-        $list = $this->model->where($map)->order($order)->paginate(config('siteinfo.list_rows'), false);
+        $list = $this->model->has('bindInfo','<',10,'meid', 'LEFT')->where([ 'sid' => $this->miniGroup])->order('mid')->paginate(config('siteinfo.list_rows'), false);
         $data = array(
             'group' => $this->miniGroup,
             'list' => $list,
@@ -73,6 +43,67 @@ class Mini extends Base
         $this->setMeta('小程序列表');
         $this->assign($data);
         return $this->fetch('mini/index');
+    }
+
+    /**
+     * @title 渠道小程序
+     * @return mixed
+     */
+    public function channel()
+    {
+        $own = $this->model->has('bindInfo','<',10,'meid', 'LEFT')->where(['sid'=> $this->miniGroup])->select()->toArray();
+        foreach ($own as &$minis){
+            $ids = model('MiniExtend')->where('bindid',$minis['mid'])->field('mid')->select()->toArray();
+            $ids = array_map(function($v){
+                return $v['mid'];
+            },$ids);
+            $minis['bindList'] = $ids;
+        }
+        if ($this->miniGroup != 1) {
+            $map = array(
+                ['sid' ,'=', 1]
+            );
+        } else {
+            $map = array(['sid', '<>', 1]);
+        }
+        $map[] = ['Mini.mid','NOT IN',implode(',',$ids)];
+        $list = $this->model->has('bindInfo','<',10,'meid', 'LEFT')->where($map)->select();
+        $data = array(
+            'group' => $this->miniGroup,
+            'list' => $list,
+            'own' => $own,
+        );
+        $this->setMeta($this->miniGroup == 1?'渠道小程序列表':'OAO小程序列表');
+        $this->assign($data);
+        return $this->fetch('mini/channel');
+    }
+
+    private function miniList($map,$isPaginate = false)
+    {
+        $order = ['mid' => 'desc'];
+        $list = $isPaginate?
+            $this->model->has('bindInfo','<',10,'meid', 'LEFT')->where($map)->order($order)->paginate(config('siteinfo.list_rows'), false):
+            $this->model->has('bindInfo','<',10,'meid', 'LEFT')->where($map)->order($order)->select();
+        //绑定列表
+        foreach ($list as $minis){
+            $binds = $minis->bindInfo;
+            if(!$binds->isEmpty()){
+                $ids = [];
+                foreach ($binds as $bind){
+                    $ids[] = abs($bind['bindid']);
+                }
+                $minis['bindList'] = $this->model->all($ids);
+                foreach ($minis['bindList'] as $mini){
+                    if($mini['sid'] == 1){
+                        $mini['channel'] = 'OAOGMES';
+                    }else {
+                        $mini['channel'] = $mini->channelInfo->nickname;
+                    }
+                }
+            }
+            $minis['bindList'] = [];
+        }
+        return $list;
     }
 
     /**
@@ -87,6 +118,9 @@ class Mini extends Base
             $valid = $this->validate($data,'Mini');
             if($valid!== true){
                 $this->error('验证失败：'.$valid);
+            }
+            if($this->miniGroup == 1){
+
             }
             $result = $this->model->save($data);
             if ($result) {
@@ -162,9 +196,13 @@ class Mini extends Base
      * @param $status
      * @return bool
      */
-    public function bindMini($id, $status)
+    public function bindMini($id, $bindid)
     {
         //绑定小程序
+        $result = model('MiniExtend')->save(['mid'=>$id,'bindid'=>$bindid]);
+        if($result){
+            $this->success('申请成功','admin/mini/index');
+        }
         return false;
     }
 
@@ -175,7 +213,16 @@ class Mini extends Base
      */
     public function applyBind($id)
     {
-        //绑定小程序
+        $list = $this->model->get($id);
+        $status = session('user_auth.sid');
+        $ids = [];
+        foreach (explode('|',$list['status']) as $id){
+            $ids[] = abs($id);
+        }
+        if(!in_array($status,$ids) || empty($ids)){
+            $list['status'] .= '|+'.$status;
+        }
+        $this->success('申请成功，请等待审核');
         return false;
     }
 

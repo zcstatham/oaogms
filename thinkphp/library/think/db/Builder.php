@@ -649,7 +649,6 @@ abstract class Builder
             $value = $this->parseClosure($query, $value, false);
         } else {
             $value = array_unique(is_array($value) ? $value : explode(',', $value));
-
             $array = [];
 
             foreach ($value as $k => $v) {

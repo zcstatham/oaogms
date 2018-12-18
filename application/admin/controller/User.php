@@ -8,7 +8,11 @@
 
 namespace app\admin\controller;
 
-
+/**
+ * Class User
+ * @title 用户
+ * @package app\admin\controller
+ */
 class User extends Base
 {
     protected $model;

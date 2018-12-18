@@ -4,6 +4,11 @@ namespace app\admin\controller;
 use think\facade\Cache;
 use think\facade\Log;
 
+/**
+ * Class Index
+ * @title 首页
+ * @package app\admin\controller
+ */
 class Index extends Base{
 
     /**
