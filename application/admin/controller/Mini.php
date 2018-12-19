@@ -119,9 +119,6 @@ class Mini extends Base
             if($valid!== true){
                 $this->error('验证失败：'.$valid);
             }
-            if($this->miniGroup == 1){
-
-            }
             $result = $this->model->save($data);
             if ($result) {
                 $this->success('新增成功', 'admin/mini/index');

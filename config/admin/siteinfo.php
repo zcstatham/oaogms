@@ -13,5 +13,6 @@
 return [
     'avator' => '/static/images/avatar-1.jpg',
     'admin_group' => [1,2,3],
+    'charts'=>['auth','login','toMini','browseAd'],
     'user_administrator' => '1',
 ];

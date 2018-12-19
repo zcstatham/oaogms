@@ -52,14 +52,13 @@ class Datatable {
 		$this->model_table_prefix = config('model_table_prefix');
 	}
 
-	/**
-	 * @title       初始化表
-	 * @description 初始化创建表
-	 * @Author      molong
-	 * @DateTime    2017-06-11
-	 * @param       string        $table 表名
-	 * @return      void               空
-	 */
+    /**
+     * @title  初始化表
+     * @param string $table 表名
+     * @param string $comment
+     * @param string $pk
+     * @return $this
+     */
 	public function initTable($table = '', $comment = '', $pk = 'id') {
 		$this->table = $this->getTablename($table, true);
 
@@ -197,12 +196,12 @@ class Datatable {
 		return $this->sql;
 	}
 
-	/**
-	 * 获取指定的表名
-	 * @var $table 要获取名字的表名
-	 * @var $prefix 获取表前缀？ 默认为不获取 false
-	 * @author colin <colin@tensent.cn>
-	 */
+    /**
+     * 获取指定的表名
+     * @param $table
+     * @param bool $prefix
+     * @return string
+     */
 	public function getTablename($table, $prefix = false) {
 		if (false == $prefix) {
 			$this->table = $this->model_table_prefix . $table;
@@ -214,15 +213,15 @@ class Datatable {
 
 	/**
 	 * 获取指定表名的所有字段及详细信息
-	 * @var $table 要获取名字的表名 可以为sent_tengsu_photo、tengsu_photo、photo
+	 * @var $table
 	 * @author colin <colin@tensent.cn>
 	 */
 	public function getFields($table) {
 		if (false == $table) {
 			$table = $this->table; //为空调用当前table
-		} else {
+		}/* else {
 			$table = $table;
-		}
+		}*/
 		$patten = "/\./";
 		if (!preg_match_all($patten, $table)) {
 			//匹配_
@@ -241,12 +240,11 @@ class Datatable {
 		return Db::query($sql);
 	}
 
-	/**
-	 * 确认表是否存在
-	 * @var $table 表名 可以为sent_tengsu_photo、tengsu_photo、photo
-	 * @author colin <colin@tensent.cn>
-	 * @return boolen
-	 */
+    /**
+     * 确认表是否存在
+     * @param $table *sent_tengsu_photo、tengsu_photo、photo
+     * @return int
+     */
 	public function CheckTable($table) {
 		//获取表名
 		$this->table = $this->getTablename($table, true);
