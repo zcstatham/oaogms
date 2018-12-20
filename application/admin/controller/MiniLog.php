@@ -23,7 +23,7 @@ class MiniLog extends Base
             'own'  => array(),
             'channel' => array(),
         );
-        if (getMiniGroup() != 1) {
+        if (getUserType() != 1) {
             $ownlist = model('Mini')->where('sid',session('user_auth.sid'))->all();
             $channellist = model('Mini')->where('sid',1)->all();
         } else {

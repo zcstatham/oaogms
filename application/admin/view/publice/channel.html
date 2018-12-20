@@ -1,0 +1,302 @@
+{extend name="public/base" /}
+{block name="style"}
+<!-- Core stylesheets -->
+<link rel="stylesheet" href="__CSS__/ui-elements/button.css">
+<style>
+    .table td, .table th {
+        vertical-align: middle;
+        text-align: center;
+        overflow: auto;
+    }
+
+    .btn.focus, .btn:focus{
+        outline: 0;
+        box-shadow: initial;
+    }
+
+    .table .btn{
+        width: auto;
+        margin: 0;
+        font-size: 0.9rem;
+        line-height: initial;
+        border-radius: 5px;
+    }
+
+    .table tr a.text-item {
+        padding: 10px 20px;
+        font-size: 0.8em;
+        color: #777;
+        width: 100%;
+        justify-content: center;
+    }
+
+    /*.table tr a.text-item:hover {*/
+    /*background: #f5f5f5;*/
+    /*}*/
+
+    .table tr a.text-item:active {
+        color: inherit;
+        text-decoration: none;
+        background-color: transparent;
+    }
+
+    .table tr .msg-profile {
+        width: 45px;
+        height: 45px;
+        margin-right: 10px;
+    }
+
+    .table tr h3 {
+        font-weight: 500;
+    }
+
+    .table tr span {
+        position: static;
+        font-size: 0.9em;
+        color: #999;
+    }
+
+    .table tr .msg-body{
+        text-align:left;
+    }
+
+    .table tr.show{
+        background: #0c5460;
+    }
+
+    .form-label {
+        display: block;
+        margin-bottom: .375rem;
+        font-weight: 600;
+        font-size: 0.875rem;
+    }
+
+    .selectgroup {
+        display: -ms-inline-flexbox;
+        display: inline-flex;
+    }
+    .selectgroup-item {
+        -ms-flex-positive: 1;
+        flex-grow: 1;
+        position: relative;
+    }
+    .selectgroup-input {
+        opacity: 0;
+        position: absolute;
+        z-index: -1;
+        top: 0;
+        left: 0;
+    }
+    .selectgroup-input:checked + .selectgroup-button {
+        border-color: #467fcf;
+        z-index: 1;
+        color: #467fcf;
+        background: #edf2fa;
+    }
+
+    .selectgroup-item:not(:last-child) .selectgroup-button {
+        border-top-right-radius: 0;
+        border-bottom-right-radius: 0;
+    }
+    .selectgroup-button {
+        display: block;
+        border: 1px solid rgba(0, 40, 100, 0.12);
+        text-align: center;
+        padding: 0.375rem 1rem;
+        position: relative;
+        cursor: pointer;
+        border-radius: 3px;
+        color: #9aa0ac;
+        -webkit-user-select: none;
+        -moz-user-select: none;
+        -ms-user-select: none;
+        user-select: none;
+        font-size: 0.9375rem;
+        line-height: 1.5;
+        min-width: 2.375rem;
+    }
+
+</style>
+{/block}
+{block name="body"}
+<div class="content-inner">
+    <div class="content-inner chart-cont">
+        <div class="form-group">
+            <div class="selectgroup">
+                <label class="selectgroup-item">
+                    <input type="radio" name="value" value="50" checked class="selectgroup-input">
+                    <span class="selectgroup-button">今天</span>
+                </label>
+                <label class="selectgroup-item">
+                    <input type="radio" name="value" value="100" class="selectgroup-input">
+                    <span class="selectgroup-button">昨天</span>
+                </label>
+                <label class="selectgroup-item">
+                    <input type="radio" name="value" value="150" class="selectgroup-input">
+                    <span class="selectgroup-button">近七天</span>
+                </label>
+                <label class="selectgroup-item">
+                    <input type="radio" name="value" value="200" class="selectgroup-input">
+                    <span class="selectgroup-button">近30天</span>
+                </label>
+            </div>
+        </div>
+        <!--***** CONTENT *****-->
+        <div class="" id="report1">
+            <div class="invoice-title ">
+                <h5 class="h5">今日概况</h5>
+            </div>
+            <hr>
+            <div class="row">
+                {volist name="cards" id ="card"}
+                <div class="col-sm-3">
+                    <div class="card">
+                        <div class="card-status bg-orange"></div>
+                        <div class="card-block">
+                            <div class="text-left report1-cont d-flex justify-content-between">
+                                <h4 class="font-light m-b-0"><i class="ti-arrow-up text-success"></i>{$card['total']}</h4>
+                                <span class="text-muted">{$card['title']}</span>
+                            </div>
+                            <p class="border-bottom-red d-flex justify-content-between mb-1"><small>渠道用户</small><small class="text-success">{$card['channel']}</small></p>
+                            <div class="progress">
+                                <div class="progress-bar bg-success" role="progressbar" style="width:{$card['channel']/$card['total']*100}%; height: 6px;"></div>
+                            </div>
+                            <p class="border-bottom-greep d-flex justify-content-between mb-1"><small>平台用户</small><small class="text-success">{$card['oao']}</small></p>
+                            <div class="progress">
+                                <div class="progress-bar bg-success" role="progressbar" style="width: {$card['oao']/$card['total']*100}%; height: 6px;"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {/volist}
+            </div>
+        </div>
+        <div class="" id="report2">
+        <div class="invoice-title ">
+            <h5 class="h5">数据分析</h5>
+        </div>
+        <hr>
+        <div class="row">
+            <div class="col-md-12">
+                <div class="card card-c1">
+                    <div class="card-header card-chart" data-background-color="green">
+                        <canvas class="ct-chart" id="myChart" height="100"></canvas>
+                    </div>
+                    <div class="card-content">
+                        <h4 class="title">推广分析</h4>
+                        <p class="category">
+                            <span class="text-success"><i class="fa fa-long-arrow-up"></i> 55% </span> increase in today sales.</p>
+                    </div>
+                    <div class="card-footer">
+                        <div class="stats">
+                            <i class="fa fa-clock-o"></i> updated 4 minutes ago
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+        <div class="" id="report3">
+            <div class="invoice-title ">
+                <h5 class="h5">活动名称</h5>
+            </div>
+            <hr>
+            <div class="row">
+                <table class="table">
+                    <thead>
+                    <tr class="bg-info text-white">
+                        <th>活动名称</th>
+                        <th>渠道名称</th>
+                        <th>访问人数</th>
+                        <th>新用户数</th>
+                        <th>新增授权用户</th>
+                        <th>浏览广告次数</th>
+                    </tr>
+                    </thead>
+                    <tbody class="panel-heading">
+                    {volist name='list' id='item' key="index" }
+                    <tr>
+                        <th scope="row">
+                            <!--<span class="mr-1"><i class="fa fa-plus"></i></span>-->
+                            {$index+($list::getCurrentPage()-1)*config('siteinfo.list_rows')}
+                        </th>
+                        <td><a rel="nofollow" href="#" class="text-item d-flex">{$item.name}</a></td>
+                        <td><a rel="nofollow" href="#" class="text-item d-flex">{$item.appid}</a></td>
+                        <td><a rel="nofollow" href="#" class="text-item d-flex">{$item.remark}</a></td>
+                        <td class="first-button">
+                            <a href="{:url('admin/mini/moreInfo',array('id'=>$item['id']))}" class="btn btn-link blue">详细</a>
+                            <a href="{:url('admin/mini/editMini',array('id'=>$item['id']))}" class="btn btn-link blue">编辑</a>
+                            <a href="{:url('admin/mini/delMini', array('id'=>$item['id']))}" class="btn btn-link blue">删除</a>
+                        </td>
+                    </tr>
+                    {/volist}
+                    </tbody>
+                </table>
+                {$page}
+            </div>
+        </div>
+    </div>
+</div>
+{/block}
+{block name="script"}
+<script>
+    var config = {
+        type: 'bar',
+        data: {
+            labels: [1850,1900,1950,1999,2050],
+            datasets: [{
+                data: [111,133,221,783,2478],
+                label: 'qt1',
+                backgroundColor: "#3e95cd",
+                fill: false
+            }, {
+                data: [809,947,1402,3700,5267],
+                label: 'qt',
+                backgroundColor: "#8e5ea2",
+                fill: false
+            }
+            ]
+        },
+        options: {
+            responsive: true,
+            tooltips: {
+                mode: 'index',
+                intersect: false
+            },
+            hover: {
+                mode: 'nearest',
+                intersect: true
+            },
+            scales: {
+                xAxes: [{
+                    stacked: true,
+                    display: true,
+                    scaleLabel: {
+                        display: true,
+                        labelString: '日期',
+                        ticks: {
+                            autoSkip: true
+                        }
+                    }
+                }],
+                yAxes: [{
+                    stacked: true,
+                    display: true,
+                    scaleLabel: {
+                        display: true,
+                        labelString: '访问人次'
+                    }
+                }]
+            }
+        }
+    };
+    new Chart(document.getElementById("myChart").getContext('2d'), config);
+    // $.getJSON("{:url('admin/publice/chart')}",{id:1},function(charts){
+    //     $.each(charts,function (index,chart){
+    //         chartbox[index].data= chart;
+    //         // config.options.title = chart.title;
+    //         chartbox[index].update();
+    //     });
+    // });
+</script>
+{/block}

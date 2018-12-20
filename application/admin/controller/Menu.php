@@ -31,7 +31,7 @@ class Menu extends Base
     public function index() {
         $list  = $this->menu->order('sort asc,nid asc')->all();
         if(!empty($list)){
-            $tree = new \doc\Tree();
+            $tree = new \com\Tree();
             $list = $tree->toFormatTree($list,'title');
         }
         $data = array(

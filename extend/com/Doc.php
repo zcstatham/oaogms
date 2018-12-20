@@ -7,7 +7,7 @@
 // | Author: molong <molong@tensent.cn> <http://www.tensent.cn>
 // +----------------------------------------------------------------------
 
-namespace doc;
+namespace com;
 
 Class Doc{
 

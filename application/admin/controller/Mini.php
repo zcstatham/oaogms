@@ -24,7 +24,7 @@ class Mini extends Base
     protected function beforeMethod()
     {
         $this->model = model('Mini');
-        $this->miniGroup = getMiniGroup();
+        $this->miniGroup = getUserType();
     }
 
     /**

@@ -15,17 +15,65 @@ function own(){
 }
 
 /**
- * 渠道小程序列表
- * @return string
+ * 今日概况
+ * @param $id
+ * @return array
  */
-function channel(){
-    return 'channel';
+function profile($id){
+    $map[] = ['create_timestamp','>=',date('Y-m-d 00:00:00',time())];
+    $map[] = ['mid','=',$id];
+    $list = db('mini_action_log')
+        ->where($map)
+        ->field(['sid','type','remark','IFNULL(COUNT(*),0)'=>'count'])
+        ->group('sid,type')->select();
+    $charts = config('siteinfo.charts');
+    foreach ($charts as $i=>$v){
+        $data[$i] = array('total'=>0, 'oao'=>0, 'channel'=>0);
+    }
+    foreach ($list as $item){
+        foreach ($charts as $i=>$v){
+            !isset($data[$i]['title']) && ($data[$i]['title'] = $v);
+            if($item['type'] == $i){
+                $data[$i]['total'] += $item['count'];
+                if($item['sid'] == 1){
+                    $data[$i]['oao'] += $item['count'];
+                }else{
+                    $data[$i]['channel'] += $item['count'];
+                }
+            }
+        }
+    }
+    return $data;
+}
+
+
+function getDateMap($str){
+    $timeFormat = '%Y-%m-%d';
+    switch ($str){
+        case 'yesterday':
+            $dateMap = ['create_timestamp','between',[date('Y-m-d',strtotime("-1 day")),date('Y-m-d',time())]];
+            break;
+        case 'week':
+            $dateMap = ['create_timestamp','between',[date('Y-m-d',strtotime("-7 day")),date('Y-m-d',time())]];
+            break;
+        case 'month':
+            $dateMap = ['create_timestamp','between',[date('Y-m-d',strtotime("-30 day")),date('Y-m-d',time())]];
+            break;
+        case 'today':
+            $dateMap = ['create_timestamp','between',[date('Y-m-d 00:00:00',time()),date('Y-m-d H:m:s',time())]];
+            $timeFormat = '%H:00:00';
+            break;
+        default:
+            $date = implode('|',$str);
+            $dateMap = ['create_timestamp','between',$date];
+    }
+    return array($dateMap, $timeFormat);
 }
 
 /**
- * 获取小程序组
+ * 获取用户类型
  */
-function getMiniGroup(){
+function getUserType(){
     $sid = session('user_auth.sid');
     if(is_administrator()){
         return 1;

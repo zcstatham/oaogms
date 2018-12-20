@@ -151,7 +151,6 @@ class SysAdmin extends Base
                 'avator' => $user->avator,
                 'last_login_timestamp' => $user->last_login_timestamp,
             );
-
             session('user_auth', $auth);
             session('user_auth_sign', data_auth_sign($auth));
             /* 记录登录SESSION和COOKIES */

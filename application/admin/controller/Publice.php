@@ -7,6 +7,7 @@
  */
 
 namespace app\admin\controller;
+use think\Db;
 
 /**
  * Class Publice
@@ -15,112 +16,132 @@ namespace app\admin\controller;
  */
 class Publice extends Base
 {
-    public function index(){
-//        $data = array(
-//            '__Menu__'=> $this->setMenu(),
-//            'data'=> ''
-//        );
+    /**
+     * @title 小程序概况
+     * @param int $id
+     * @return mixed
+     */
+    public function index($id = 1){
+        $this->assign('cards',profile($id));
         return $this->fetch('publice/report');
     }
 
-    public function chart($id=1,$granularity='month'){
-        $timeFormat = '%Y-%m-%d';
-        $map[] = ['mid','=',$id];
-        switch ($granularity){
-            case 'week':
-                $map[] = ['create_timestamp','between',[date('Y-m-d 00:00:00',strtotime("-7 day")),date('Y-m-d H:m:s',time())]];
-                break;
-            case 'month':
-                $map[] = ['create_timestamp','between',[date('Y-m-01 00:00:00',time()),date('Y-m-d H:m:s',time())]];
-                break;
-            case 'all':
-                break;
-            default:
-                $map[] = ['create_timestamp','between',[date('Y-m-d 00:00:00',time()),date('Y-m-d H:m:s',time())]];
-                $timeFormat = '%Y-%m-%d %H:00:00';
+    /**
+     * 推广概况
+     * @param int $id
+     * @return mixed
+     */
+    public function channel($id = 1,$granularity='today'){
+        //各项数据表
+        $sid = getUserType();
+        if($sid == 1){
+            $map[] = ['sid','<>',1];
+        }else{
+            $map[] = ['sid','=',$sid];
         }
-        $list = db('mini_action_log')
-            ->field(['sid','type','remark','COUNT(*)'=>'count','DATE_FORMAT( create_timestamp, "'.$timeFormat.'")'=>'date'])
-            ->group('type,date')
-            ->where($map)
-            ->select();
-        $charts = config('siteinfo.charts');
-        foreach ($list as $item){
-            foreach ($charts as $chartname){
-                $$chartname['labels'][] = $item['date'];
-                $flip = array_flip($$chartname['labels']);
-                if($item['sid'] == 1 && $item['type'] == $chartname){
-                    $$chartname['datasets'][0]['data'][$flip[$item['date']]] = $item['count'];
-                    $$chartname['datasets'][0]['label'] = 'oao';
-                    $$chartname['datasets'][0]['borderColor'] = '#3e95cd';
-                    $$chartname['datasets'][0]['fill'] = false;
-                }else if($item['type'] == $chartname){
-                    $$chartname['datasets'][1]['data'][$flip[$item['date']]] = $item['count'];
-                    $$chartname['datasets'][1]['label'] = '渠道';
-                    $$chartname['datasets'][1]['borderColor'] = '#8e5ea2';
-                    $$chartname['datasets'][1]['fill'] = false;
-                }
-            }
-        }
-        foreach ($charts as $chartname) {
-            $$chartname['labels'] = array_values(
-                array_flip(array_flip($$chartname['labels'])));
-            $data[$chartname] = $$chartname;
-        }
+        $list = $this->getChartData($id,$granularity,$map);
+
+
+        //渠道数据概况
+        $this->assign('cards',profile($id));
+        return $this->fetch();
+    }
+
+    public function chart($id=1,$granularity='today'){
+        $data = $this->getChartData($id,$granularity);
         return json($data);
     }
 
-    protected function setMenu()
-    {
-        $menu       = array(
-            'own'  => array(),
-            'channel' => array(),
-        );
-        if (getMiniGroup() != 1) {
-            $ownlist = model('Mini')->where('sid',session('user_auth.sid'))->all();
-            $channellist = model('Mini')->where('sid',1)->all();
-        } else {
-            $ownlist = model('Mini')->where('sid',1)->all();
-            $channellist = model('Mini')->where('sid','<>',1)->all();
-        }
-        foreach ($ownlist as $key => $value) {
-            //此处用来做权限判断
-            if (IS_ROOT || $this->checkRule($value['url'], 2, null)) {
-                if ($controller == $value['url']) {
-                    $value['style'] = "active";
-                }
-                $menu['main'][$value['nid']] = $value;
-            }
-        }
-        foreach ($channellist as $key => $value) {
-            //此处用来做权限判断
-            if (IS_ROOT || $this->checkRule($value['url'], 2, null)) {
-                if ($controller == $value['url']) {
-                    $value['style'] = "active";
-                }
-                $menu['main'][$value['nid']] = $value;
-            }
-        }
+    private function card($id){
+        $data = profile($id);
+        return json($data);
+    }
 
-        // 查找当前子菜单
-        $pid = db('menu')->where("pid !=0 AND url like '%{$hover_url}%'")->value('pid');
-        $id  = db('menu')->where("pid = 0 AND url like '%{$hover_url}%'")->value('nid');
-        $pid = $pid ? $pid : $id;
-        if ($pid) {
-            $map['pid']  = $pid;
-            $map['hide'] = 0;
-            $map['type'] = 'admin';
-            $row = db('menu')->field("nid,title,url,icon,`group`,pid,'' as style")->where($map)->order('sort asc')->select();
-            foreach ($row as $key => $value) {
-                if (IS_ROOT || $this->checkRule($value['url'], 2, null) || 'test') {
-                    if ($controller == $value['url']) {
-                        $menu['main'][$value['pid']]['style'] = "active";
-                        $value['style']                       = "active";
-                    }
-                    $menu['child'][] = $value;
+    public function getChartData($id,$dateType,$map=[]){
+        $dateformat = getDateMap($dateType);
+        $timeFormat = $dateformat[1];
+        $map[] = ['mid','=',$id];
+        $map[] = $dateformat[0];
+        $field = ['STRCMP(`sid`,1)' => 'sid',
+            'type', 'remark',
+            'IFNULL(COUNT(*),0)' => 'count',
+            'DATE_FORMAT( create_timestamp, "' . $timeFormat . '")' => 'date'];
+        $group =  'sid,type,date';
+        $charts = config('siteinfo.charts');
+        foreach ($charts as $chartname=>$chartlabel) {
+            if($dateType == 'today'){
+                for($i = 0; $i < 24; $i++){
+                    $d = str_pad($i,2,"0",STR_PAD_LEFT);
+                    $union[]= "SELECT 0,'$chartname','',0,'$d:00:00'";
+                    $union[]= "SELECT 1,'$chartname','',0,'$d:00:00'";
                 }
+                $subsql = db('mini_action_log')
+                    ->where($map)
+                    ->where('type',$chartname)
+                    ->field($field)
+                    ->group($group)
+                    ->union($union)
+                    ->buildSql();
+                $$chartname = Db::query('SELECT * FROM'.$subsql.'AS d GROUP BY d.date,d.sid');
+            }else {
+                $subsql  = db('mini_action_log')
+                    ->where($map)
+                    ->where('type',$chartname)
+                    ->field($field)
+                    ->group($group)
+                    ->buildSql();
+                $$chartname = db('calendar')
+                    ->field('b.sid,b.remark,IFNULL(b.count,0) as count,a.date')
+                    ->alias('a')
+                    ->join([$subsql=> 'b'], 'a.date = b.date')
+                    ->select();
             }
+
+            $data[$chartname] = $this->formChart($$chartname);
         }
-        Container::get('app')['view']->assign('__menu__', $menu);
+        return $data;
+    }
+
+    private function formChart($list)
+    {
+        $data = array(
+            'labels'=>[],
+            'datasets'=>array(
+                array(
+                    'data'=>[],
+                    'label'=>'oao',
+                    'borderColor'=>'#3e95cd',
+                    'fill'=>false,
+                ),
+                array(
+                    'data'=>[],
+                    'label'=>'渠道',
+                    'borderColor'=>'#8e5ea2',
+                    'fill'=>false,
+                ),
+                array(
+                    'data'=>[],
+                    'label'=>'总计',
+                    'borderColor'=>'#28a745',
+                    'fill'=>false,
+                )
+            ),
+        );
+        foreach ($list as $item){
+            if(!in_array($item['date'], $data['labels'])){
+                $data['labels'][] = $item['date'];
+                $data['datasets'][2]['data'][$item['date']] = 0;
+            }
+            if($item['sid'] == 0){
+                $data['datasets'][0]['data'][$item['date']] = $item['count'];
+            }else{
+                $data['datasets'][1]['data'][$item['date']] = $item['count'];
+            }
+            $data['datasets'][2]['data'][$item['date']] += $item['count'];
+        }
+        foreach ($data['datasets'] as &$v){
+            $v['data'] = array_values($v['data']);
+        }
+        return $data;
     }
 }
