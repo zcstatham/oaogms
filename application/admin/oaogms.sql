@@ -3779,6 +3779,21 @@ INSERT INTO `oao_calendar` VALUES ('2028-11-30');
 INSERT INTO `oao_calendar` VALUES ('2028-12-01');
 
 -- ----------------------------
+-- Table structure for oao_channel_active
+-- ----------------------------
+DROP TABLE IF EXISTS `oao_channel_active`;
+CREATE TABLE `oao_channel_active` (
+  `aid` int(11) unsigned NOT NULL AUTO_INCREMENT COMMENT '主键',
+  `name` char(30) NOT NULL DEFAULT 'test' COMMENT '活动名称',
+  `mid` int(11) NOT NULL DEFAULT '0' COMMENT '小程序id',
+  `cid` int(11) NOT NULL DEFAULT '0' COMMENT '渠道id',
+  `path` char(80) NOT NULL DEFAULT 'pages/index/index' COMMENT '监控链接 mid + sid',
+  `type` tinyint(4) unsigned NOT NULL DEFAULT '1' COMMENT '类型：1.小程序跳转',
+  `create_timestamp` datetime NOT NULL COMMENT '创建时间',
+  PRIMARY KEY (`aid`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8 ROW_FORMAT=DYNAMIC COMMENT='渠道表';
+
+-- ----------------------------
 -- Table structure for oao_channel
 -- ----------------------------
 DROP TABLE IF EXISTS `oao_channel`;

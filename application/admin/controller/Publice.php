@@ -22,7 +22,14 @@ class Publice extends Base
      * @return mixed
      */
     public function index($id = 1){
-        $this->assign('cards',profile($id));
+        $list = model('Mini')->field('mid,name')->all();
+        $map[] = ['create_timestamp','>=',date('Y-m-d 00:00:00',time())];
+        $map[] = ['mid','=',$id];
+        $data = array(
+            'minis'=> $list,
+            'cards'=> profile($map)
+        );
+        $this->assign($data);
         return $this->fetch('publice/report');
     }
 
@@ -32,19 +39,39 @@ class Publice extends Base
      * @return mixed
      */
     public function channel($id = 1,$granularity='today'){
-        //各项数据表
+        $this->assign($this->getChannelData($id,$granularity));
+        return $this->fetch();
+    }
+
+    public function channelData($id = 1,$granularity='today'){
+        return json($this->getChannelData($id,$granularity));
+    }
+
+    public function getChannelData($id = 1,$granularity='today'){
+        $dateformat = getDateMap($granularity);
         $sid = getUserType();
         if($sid == 1){
-            $map[] = ['sid','<>',1];
+            $cmap[] = ['sid','<>',1];
         }else{
-            $map[] = ['sid','=',$sid];
+            $cmap[] = ['sid','=',$sid];
         }
-        $list = $this->getChartData($id,$granularity,$map);
+        $charts = $this->getChartData($id,$granularity,$cmap);
+        $list = Db::view('Channel','cid,name')
+            ->view('ChannelActive','mid,name','Channel.cid=ChannelActive.cid')->select();
+        foreach ($list as $item){
+            $pmap = array(
+                ['id','=',$id],
+                $dateformat[0],
+                ['sid','=',$item['cid']]
+            );
+            $profile = profile($pmap);
+            $item->merge($profile);
+        }
+        return array(
+            'charts'=>$charts,
+            'list'=>$list
+        );
 
-
-        //渠道数据概况
-        $this->assign('cards',profile($id));
-        return $this->fetch();
     }
 
     public function chart($id=1,$granularity='today'){
@@ -52,7 +79,7 @@ class Publice extends Base
         return json($data);
     }
 
-    private function card($id){
+    public function card($id){
         $data = profile($id);
         return json($data);
     }

@@ -210,14 +210,64 @@
     .bg-lime {
         background-color: #7bd235 !important;
     }
+
+    .selectgroup {
+        display: -ms-inline-flexbox;
+        display: inline-flex;
+    }
+    .selectgroup-item {
+        -ms-flex-positive: 1;
+        flex-grow: 1;
+        position: relative;
+    }
+    .selectgroup-input {
+        opacity: 0;
+        position: absolute;
+        z-index: -1;
+        top: 0;
+        left: 0;
+    }
+    .selectgroup-input:checked + .selectgroup-button {
+        border-color: #467fcf;
+        z-index: 1;
+        color: #467fcf;
+        background: #edf2fa;
+    }
+
+    .selectgroup-item:not(:last-child) .selectgroup-button {
+        border-top-right-radius: 0;
+        border-bottom-right-radius: 0;
+    }
+    .selectgroup-button {
+        display: block;
+        border: 1px solid rgba(0, 40, 100, 0.12);
+        text-align: center;
+        padding: 0.375rem 1rem;
+        position: relative;
+        cursor: pointer;
+        border-radius: 3px;
+        color: #9aa0ac;
+        -webkit-user-select: none;
+        -moz-user-select: none;
+        -ms-user-select: none;
+        user-select: none;
+        font-size: 0.9375rem;
+        line-height: 1.5;
+        min-width: 2.375rem;
+    }
 </style>
 {/block}
 {block name="body"}
 <div class="content-inner">
     <!-- 表格统计 -->
     <div class="" id="report1">
-        <div class="invoice-title ">
+        <div class="invoice-title d-flex justify-content-between">
             <h5 class="h5">今日概况</h5>
+            <select class="custom-select mb-2 mr-sm-2 mb-sm-0" name="mini" id="mini" >
+                {volist name="minis" id="item"}
+                <option value="{$item.id}" {if ($item.id eq $Request.get.id) or ($key==0)}selected{/if}>{$item.name}</option>
+                {/volist}
+            </select>
         </div>
         <hr>
         <div class="row" id="cards">
@@ -246,7 +296,26 @@
     </div>
     <div class="" id="report2">
         <div class="invoice-title ">
-            <h5 class="h5">今日概况</h5>
+            <div class="form-group">
+                <div class="selectgroup">
+                    <label class="selectgroup-item">
+                        <input type="radio" name="value" value="today" checked class="selectgroup-input">
+                        <span class="selectgroup-button">今天</span>
+                    </label>
+                    <label class="selectgroup-item">
+                        <input type="radio" name="value" value="yesterday" class="selectgroup-input">
+                        <span class="selectgroup-button">昨天</span>
+                    </label>
+                    <label class="selectgroup-item">
+                        <input type="radio" name="value" value="week" class="selectgroup-input">
+                        <span class="selectgroup-button">近七天</span>
+                    </label>
+                    <label class="selectgroup-item">
+                        <input type="radio" name="value" value="month" class="selectgroup-input">
+                        <span class="selectgroup-button">近30天</span>
+                    </label>
+                </div>
+            </div>
         </div>
         <hr>
         <div class="row">
@@ -368,12 +437,62 @@
                 }
             }
         };
-        $.getJSON("{:url('admin/publice/chart')}",{id:1},function(charts){
-            $.each(charts,function (index,chart){
+
+        getCharts({id:1});
+        $('.selectgroup-button').on('click',function(e){
+            e.stopPropagation();
+            e.preventDefault();
+            var id = $('#mini').val();
+            var date = $(this).prev('input').val();
+            var data = {
+                id: id?id:1,
+                date:date
+            }
+            getCharts(data);
+        })
+        $('#mini').change(function(){
+            var id = $(this).val();
+            getCards(id);
+            getCharts({id:id});
+        });
+        
+        function getCharts(data){
+            $.getJSON("{:url('admin/publice/chart')}",data,function(charts){
+                $.each(charts,function (index,chart){
                     config.data= chart;
                     new Chart(chartbox[index], $.extend({},config))
+                });
             });
-        });
+        }
+        
+        function getCards(id){
+            $.getJSON("{:url('admin/publice/card')}",{id:id},function(carts){
+                var html='';
+                $.each(carts,function (index,cart){
+                    html += '<div class="col-sm-3">' +
+                        '    <div class="card">' +
+                        '        <div class="card-status bg-orange"></div>' +
+                        '        <div class="card-block">' +
+                        '            <div class="text-left report1-cont d-flex justify-content-between">' +
+                        '                <h4 class="font-light m-b-0"><i class="ti-arrow-up text-success"></i>'+card['total']+'</h4>' +
+                        '                <span class="text-muted">'+card['title']+'</span>' +
+                        '            </div>' +
+                        '            <p class="border-bottom-red d-flex justify-content-between mb-1"><small>渠道用户</small><small class="text-success">'+card['channel']+'</small></p>' +
+                        '            <div class="progress">' +
+                        '                <div class="progress-bar bg-success" role="progressbar" ' +
+                        '                   style="width:'+ (card['total']==0?0:(card['channel']/card['total']*100))+'%; height: 6px;"></div>' +
+                        '            </div>' +
+                        '            <p class="border-bottom-greep d-flex justify-content-between mb-1"><small>平台用户</small><small class="text-success">'+card['oao']+'</small></p>' +
+                        '            <div class="progress">' +
+                        '                <div class="progress-bar bg-success" role="progressbar" style="width: '+ (card['total']==0?0:(card['channel']/card['total']*100))+'%; height: 6px;"></div>' +
+                        '            </div>' +
+                        '        </div>' +
+                        '    </div>' +
+                        '</div>';
+                });
+                $('#card').html(html);
+            });
+        }
     });
 </script>
 {/block}

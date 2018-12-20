@@ -124,53 +124,25 @@
         <div class="form-group">
             <div class="selectgroup">
                 <label class="selectgroup-item">
-                    <input type="radio" name="value" value="50" checked class="selectgroup-input">
+                    <input type="radio" name="value" value="today" checked class="selectgroup-input">
                     <span class="selectgroup-button">今天</span>
                 </label>
                 <label class="selectgroup-item">
-                    <input type="radio" name="value" value="100" class="selectgroup-input">
+                    <input type="radio" name="value" value="yesterday" class="selectgroup-input">
                     <span class="selectgroup-button">昨天</span>
                 </label>
                 <label class="selectgroup-item">
-                    <input type="radio" name="value" value="150" class="selectgroup-input">
+                    <input type="radio" name="value" value="week" class="selectgroup-input">
                     <span class="selectgroup-button">近七天</span>
                 </label>
                 <label class="selectgroup-item">
-                    <input type="radio" name="value" value="200" class="selectgroup-input">
+                    <input type="radio" name="value" value="month" class="selectgroup-input">
                     <span class="selectgroup-button">近30天</span>
                 </label>
             </div>
         </div>
+
         <!--***** CONTENT *****-->
-        <div class="" id="report1">
-            <div class="invoice-title ">
-                <h5 class="h5">今日概况</h5>
-            </div>
-            <hr>
-            <div class="row">
-                {volist name="cards" id ="card"}
-                <div class="col-sm-3">
-                    <div class="card">
-                        <div class="card-status bg-orange"></div>
-                        <div class="card-block">
-                            <div class="text-left report1-cont d-flex justify-content-between">
-                                <h4 class="font-light m-b-0"><i class="ti-arrow-up text-success"></i>{$card['total']}</h4>
-                                <span class="text-muted">{$card['title']}</span>
-                            </div>
-                            <p class="border-bottom-red d-flex justify-content-between mb-1"><small>渠道用户</small><small class="text-success">{$card['channel']}</small></p>
-                            <div class="progress">
-                                <div class="progress-bar bg-success" role="progressbar" style="width:{$card['channel']/$card['total']*100}%; height: 6px;"></div>
-                            </div>
-                            <p class="border-bottom-greep d-flex justify-content-between mb-1"><small>平台用户</small><small class="text-success">{$card['oao']}</small></p>
-                            <div class="progress">
-                                <div class="progress-bar bg-success" role="progressbar" style="width: {$card['oao']/$card['total']*100}%; height: 6px;"></div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                {/volist}
-            </div>
-        </div>
         <div class="" id="report2">
         <div class="invoice-title ">
             <h5 class="h5">数据分析</h5>
@@ -232,7 +204,6 @@
                     {/volist}
                     </tbody>
                 </table>
-                {$page}
             </div>
         </div>
     </div>

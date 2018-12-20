@@ -19,9 +19,7 @@ function own(){
  * @param $id
  * @return array
  */
-function profile($id){
-    $map[] = ['create_timestamp','>=',date('Y-m-d 00:00:00',time())];
-    $map[] = ['mid','=',$id];
+function profile($map){
     $list = db('mini_action_log')
         ->where($map)
         ->field(['sid','type','remark','IFNULL(COUNT(*),0)'=>'count'])
