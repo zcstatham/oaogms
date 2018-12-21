@@ -148,13 +148,64 @@
         </div>
         <hr>
         <div class="row">
+            <div class="col-md-6">
+                <div class="card card-c1">
+                    <div class="card-header card-chart" data-background-color="green">
+                        <canvas class="ct-chart" id="login" height="200"></canvas>
+                    </div>
+                    <div class="card-content">
+                        <h4 class="title">新增访问</h4>
+                        <p class="category">
+                            <span class="text-success"><i class="fa fa-long-arrow-up"></i> 55% </span> increase in today sales.</p>
+                    </div>
+                    <div class="card-footer">
+                        <div class="stats">
+                            <i class="fa fa-clock-o"></i> updated 4 minutes ago
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card card-c1">
+                    <div class="card-header card-chart" data-background-color="green">
+                        <canvas class="ct-chart" id="register" height="200"></canvas>
+                    </div>
+                    <div class="card-content">
+                        <h4 class="title">新增用户</h4>
+                        <p class="category">
+                            <span class="text-success"><i class="fa fa-long-arrow-up"></i> 55% </span> increase in today sales.</p>
+                    </div>
+                    <div class="card-footer">
+                        <div class="stats">
+                            <i class="fa fa-clock-o"></i> updated 4 minutes ago
+                        </div>
+                    </div>
+                </div>
+            </div>
             <div class="col-md-12">
                 <div class="card card-c1">
                     <div class="card-header card-chart" data-background-color="green">
-                        <canvas class="ct-chart" id="myChart" height="100"></canvas>
+                        <canvas class="ct-chart" id="auth" height="100"></canvas>
                     </div>
                     <div class="card-content">
-                        <h4 class="title">推广分析</h4>
+                        <h4 class="title">新增授权</h4>
+                        <p class="category">
+                            <span class="text-success"><i class="fa fa-long-arrow-up"></i> 55% </span> increase in today sales.</p>
+                    </div>
+                    <div class="card-footer">
+                        <div class="stats">
+                            <i class="fa fa-clock-o"></i> updated 4 minutes ago
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-12">
+                <div class="card card-c1">
+                    <div class="card-header card-chart" data-background-color="green">
+                        <canvas class="ct-chart" id="browseAd" height="100"></canvas>
+                    </div>
+                    <div class="card-content">
+                        <h4 class="title">广告浏览次数</h4>
                         <p class="category">
                             <span class="text-success"><i class="fa fa-long-arrow-up"></i> 55% </span> increase in today sales.</p>
                     </div>
@@ -203,54 +254,64 @@
 </div>
 {/block}
 {block name="script"}
-<script src="__JS__/utils,js"></script>
+<script src="__JS__/utils.js"></script>
 <script>
+    var chartbox = {
+        'login': document.getElementById("login").getContext('2d'),
+        'register': document.getElementById("register").getContext('2d'),
+        'auth': document.getElementById("auth").getContext('2d'),
+        'browseAd': document.getElementById("browseAd").getContext('2d')
+    };
     var config = {
         type: 'bar',
-        data: {
-            labels: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"],
-            datasets: [{
-                label: '',
-                type: 'bar',
-                data: [12, 15, 3, 5, 2, 3],
-                backgroundColor: [
-                    'rgba(255, 99, 132, 1)',
-                    'rgba(54, 162, 235, 1)',
-                    'rgba(255, 206, 86, 1)',
-                    'rgba(75, 192, 192, 1)',
-                    'rgba(153, 102, 255, 1)',
-                    'rgba(255, 159, 64, 1)'
-                ],
-                borderColor: [
-                    'rgba(255,99,132,1)',
-                    'rgba(54, 162, 235, 1)',
-                    'rgba(255, 206, 86, 1)',
-                    'rgba(75, 192, 192, 1)',
-                    'rgba(153, 102, 255, 1)',
-                    'rgba(255, 159, 64, 1)'
-                ],
-                borderWidth: 1
-            }]
-        },
         options: {
-            legend: { display: false },
-            title: {
-                display: true,
-                text: ''
+            responsive: true,
+            legend: {
+                position: 'top',
             }
         }
     };
-    new Chart(document.getElementById("myChart").getContext('2d'), config);
-    color(window.chartColors.red).alpha(0.5).rgbString();
-
-
-    $.getJSON("{:url('admin/publice/channelData')}",{id:1},function(charts){
-        $.each(charts,function (index,chart){
-            chartbox[index].data= chart;
-            // config.options.title = chart.title;
-            chartbox[index].update();
-        });
-        new Chart(document.getElementById("myChart").getContext('2d'), config);
+    var colorNames = Object.keys(window.chartColors);
+    getCharts({id:1});
+    $('.selectgroup-button').on('click',function(e){
+        var id = $('#mini').val();
+        var date = $(this).prev('input').val();
+        var data = {
+            id: id?id:1,
+            date:date
+        }
+        getCharts(data);
     });
+    $('#mini').change(function(){
+        var id = $(this).val();
+        getCharts({id:id});
+    });
+
+    function getCharts(data){
+        $.getJSON("{:url('admin/publice/channelData')}",data,function(charts){
+            config.data = [];
+            $.each(charts,function (index,chart){
+                config.data['labels']= chart.labels;
+                config.data['datasets']=[];
+                $.each(chart.datasets,function(i,datas){
+                    var colorName = colorNames[config.data['datasets'] % colorNames.length];
+                    var dsColor = window.chartColors[colorName];
+                    var data = {
+                        label: '',
+                        data: [],
+                        backgroundColor: dsColor,
+                        borderColor:dsColor,
+                        borderWidth: 1
+                    }
+                    $.each(datas.data,function(i,d) {
+                        data.label = d[1];
+                        data.data[0] = d[0];
+                    })
+                    config.data['datasets'].push(data)
+                });
+                new Chart(chartbox[index], $.extend({},config))
+            });
+        });
+    }
 </script>
 {/block}

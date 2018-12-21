@@ -35,7 +35,7 @@ class Index extends controller
     public function login(){
         if(model('User')->login($this->request->post('token'))){
             $this->data['token'] = $_POST['token'];
-            if(!log('login')){
+            if(!$this->log('login')){
                 $this->data['code']=0;
                 return json($this->data);
             }
@@ -49,7 +49,7 @@ class Index extends controller
     public function register(){
         $uid = model('User')->register($this->mid,$this->request->post('code'));
         if($uid === true ) {
-            if(!log('register')){
+            if(!$this->log('register')){
                 $this->data['code']=0;
                 return json($this->data);
             }
@@ -63,7 +63,7 @@ class Index extends controller
     //看广告
     public function browsead(){
         if(model('User')->login($this->request->post('token'))){
-            if(!log('browseAd')){
+            if(!$this->log('browseAd')){
                 $this->data['code']=0;
                 return json($this->data);
             }
@@ -78,15 +78,16 @@ class Index extends controller
             'type' => $type,
             'uid' => model('User')->register(),
             'action_ip' => get_client_ip(),
-            'sid' => $this->sid,
-            'mid' => $this->sid
+            'aid' => $this->aid,
+            'mid' => $this->mid
         );
         return model('MiniLog')->save($data);
     }
 
     protected function checkDate(){
         $this->mid = decodeN($this->request->post('oao_media_id'));
-        $this->sid = decodeN($this->request->post('oao_link_key'));
+        $this->aid = $this->request->post('oao_link_key');
+        $this->aid = $this->aid?decodeN($this->aid):0;
         if(!isset($mid)){
             json_error_exception('1003');
         }

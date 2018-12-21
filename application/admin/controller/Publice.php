@@ -74,47 +74,33 @@ class Publice extends Base
         $timeFormat = $dateformat[1];
         $dateformat[0][0] = 'log.create_timestamp';
         $map[] = $dateformat[0];
-        // 已渠道为x 轴,
-        $subsql  = Db::view('mini_log log',
-            ['type', 'remark','aid',
-            'IFNULL(COUNT(log.id),0)' => 'count',
-            'DATE_FORMAT(log.create_timestamp, "' . $timeFormat . '")' => 'date'])
-            ->view('channel_active active','name','log.aid=active.aid')
-            ->view('mini','mid','mini.mid=active.mid')
-            ->view('sys_admin admin','nickname','admin.sid=active.sid')
-            ->where($map)
-            ->where('log.type',$type)
-            ->group('log.aid')
-            ->buildSql();
-        if($dateType == 'today') {
-            for ($i = 0; $i < 24; $i++) {
-                $d = str_pad($i, 2, "0", STR_PAD_LEFT);
-                $union[] = "SELECT 0,'$type','',0,'$d:00:00'";
-                $union[] = "SELECT 1,'$type','',0,'$d:00:00'";
+        $charts = config('siteinfo.charts');
+        foreach ($charts as $chartname=>$chartlabel) {
+            $subsql  = Db::view('mini_log log',
+                ['type', 'remark','aid',
+                    'IFNULL(COUNT(log.id),0)' => 'count',
+                    'DATE_FORMAT(log.create_timestamp, "' . $timeFormat . '")' => 'date'])
+                ->view('channel_active active','name','log.aid=active.aid')
+                ->view('mini','mid','mini.mid=active.mid')
+                ->view('sys_admin admin','nickname','admin.sid=active.sid')
+                ->where($map)
+                ->group('log.aid,log.type')
+                ->buildSql();
+            if($dateType == 'today') {
+                for ($i = 0; $i < 24; $i++) {
+                    $d = str_pad($i, 2, "0", STR_PAD_LEFT);
+                    $union[] = "SELECT 0,'$type','',0,'$d:00:00'";
+                    $union[] = "SELECT 1,'$type','',0,'$d:00:00'";
+                }
+                $$chartname = Db::query('SELECT * FROM'.$subsql.'AS d GROUP BY d.date,d.aid');
+            }else {
+                $$chartname = db('calendar')
+                    ->field('b.nickname,b.remark,IFNULL(b.count,0) as count,a.date')
+                    ->alias('a')
+                    ->join([$subsql => 'b'], 'a.date = b.date')
+                    ->select();
             }
-            $list = Db::query('SELECT * FROM'.$subsql.'AS d GROUP BY d.date,d.aid');
-        }else {
-            $list = db('calendar')
-                ->field('b.nickname,b.remark,IFNULL(b.count,0) as count,a.date')
-                ->alias('a')
-                ->join([$subsql => 'b'], 'a.date = b.date')
-                ->select();
-        }
-        $data = array(
-            'labels'=>[],
-            'datasets'=>array(
-            )
-        );
-        foreach ($list as $item) {
-            if(!in_array($item['nickname'], $data['labels'])){
-                $data['labels'][] = $item['name'];
-            }
-            if($item['aid'] != 0){
-                $data['datasets'][$item['aid']]['data'][$item['date']] = $item['count'];
-            }
-            foreach ($data['datasets'] as &$v){
-                $v['data'] = array_values($v['data']);
-            }
+            $data[$chartname] = $this->formChannelChart($$chartname);
         }
         return $data;
     }
@@ -134,11 +120,11 @@ class Publice extends Base
         $timeFormat = $dateformat[1];
         $map[] = ['mid','=',$id];
         $map[] = $dateformat[0];
-        $field = ['STRCMP(`sid`,1)' => 'sid',
+        $field = ['aid',
             'type', 'remark',
             'IFNULL(COUNT(*),0)' => 'count',
             'DATE_FORMAT( create_timestamp, "' . $timeFormat . '")' => 'date'];
-        $group =  'sid,type,date';
+        $group =  'aid,type,date';
         $charts = config('siteinfo.charts');
         foreach ($charts as $chartname=>$chartlabel) {
             if($dateType == 'today'){
@@ -154,7 +140,7 @@ class Publice extends Base
                     ->group($group)
                     ->union($union)
                     ->buildSql();
-                $$chartname = Db::query('SELECT * FROM'.$subsql.'AS d GROUP BY d.date,d.sid');
+                $$chartname = Db::query('SELECT * FROM'.$subsql.'AS d GROUP BY d.date,d.aid');
             }else {
                 $subsql  = db('mini_log')
                     ->where($map)
@@ -204,12 +190,32 @@ class Publice extends Base
                 $data['labels'][] = $item['date'];
                 $data['datasets'][2]['data'][$item['date']] = 0;
             }
-            if($item['sid'] == 0){
+            if($item['aid'] == 0){
                 $data['datasets'][0]['data'][$item['date']] = $item['count'];
             }else{
                 $data['datasets'][1]['data'][$item['date']] = $item['count'];
             }
             $data['datasets'][2]['data'][$item['date']] += $item['count'];
+        }
+        foreach ($data['datasets'] as &$v){
+            $v['data'] = array_values($v['data']);
+        }
+        return $data;
+    }
+    private function formChannelChart($list)
+    {
+        $data = array(
+            'labels'=>[],
+            'datasets'=>array(
+            )
+        );
+        foreach ($list as $item) {
+            if(!in_array($item['nickname'], $data['labels'])){
+                $data['labels'][$item['aid']] = $item['nickname'];
+            }
+            if($item['aid'] != 0){
+                $data['datasets'][$item['aid']]['data'][$item['date']] = [$item['count'],$item['name']];
+            }
         }
         foreach ($data['datasets'] as &$v){
             $v['data'] = array_values($v['data']);
