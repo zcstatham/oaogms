@@ -16,12 +16,10 @@
 use think\facade\Route;
 
 Route::domain('api',function() {
-    Route::group('',[
-        '/wxpay/notify'    	   => 'api/index/wxpay?type=notify', //订单回调
-        '/index/advertisement' => ['api/home/advertisement', ['method' => 'post']], //获取广告
-    ])->middleware('Check');
-    Route::rule('/login','api/index/login');
-});
+    Route::rule('log/lg','api/index/login');
+    Route::rule('log/ah','api/index/authed');
+    Route::rule('log/ad','api/index/browsead');
+})->method('post');
 
 
 Route::domain('admin',array(

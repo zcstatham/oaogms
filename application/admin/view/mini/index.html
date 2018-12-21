@@ -67,7 +67,7 @@
 {/block}
 {block name="body"}
 <div class="content-inner">
-    <div class="content-inner chart-cont">
+    <div class="chart-cont">
         <!--***** CONTENT *****-->
         <div class="top-option third-button container">
             <a href="{:url('admin/mini/addMini')}" class="btn btn-outline-primary">+ 添加小程序</a>
@@ -95,7 +95,6 @@
                     <td><a rel="nofollow" href="#" class="text-item d-flex">{$item.appid}</a></td>
                     <td><a rel="nofollow" href="#" class="text-item d-flex">{$item.remark}</a></td>
                     <td class="first-button">
-                        <a href="{:url('admin/mini/moreInfo',array('id'=>$item['id']))}" class="btn btn-link blue">详细</a>
                         <a href="{:url('admin/mini/editMini',array('id'=>$item['id']))}" class="btn btn-link blue">编辑</a>
                         <a href="{:url('admin/mini/delMini', array('id'=>$item['id']))}" class="btn btn-link blue">删除</a>
                     </td>

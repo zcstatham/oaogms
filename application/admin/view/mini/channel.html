@@ -11,55 +11,58 @@
         text-align: center;
         text-align-last: center;
     }
+    td,th{
+        text-align: center;
+        vertical-align: middle;
+    }
 </style>
 {/block}
 {block name="body"}
 <div class="content-inner">
-    <div class="content-inner chart-cont">
-        <div class="row" id="card-2">
-            {volist name="list" id="item" empty="暂无未绑小程序" }
-            <div class="col-lg-3 col-sm-6">
-                <div class="card hovercard">
-                    <div class="cardheader"></div>
-                    <div class="avatar">
-                        <img alt="" src="__IMG__/mini_icon.png">
-                    </div>
-                    <form class="info" action="{:url('admin/mini/bindMini')}" id="mini-{$item['id']}">
-                        <input type="hidden" name="id" value="{$item['id']}">
-                        <div class="title">
-                            <a target="_blank" href="javascript:void(0);">{$item['name']}</a>
-                        </div>
-                        <div class="form-group">
-                            <label for="exampleSelect1">{$group==1?'渠道商小程序列表':'OAO小程序列表'}</label>
-                            <select class="form-control" name="bindid" id="exampleSelect1">
-                                <option value="-1">——请选择小程序——</option>
-                                {volist name="own" id="ownlist"}
-                                <option value="{$ownlist['mid']}" disabled="{$ownlist['mid']|in_array = $ownlist['bindList']}">
-                                    {$ownlist['name']}
-                                </option>
-                                {/volist}
-                            </select>
-                        </div>
-                    </form>
-                    <div class="bottom">
-                        <!--<small>Last updated 3 mins ago</small>-->
-                        <button class="btn btn-info float-right btn-sm" disabled type="submit" form="mini-{$item['id']}">绑定</button>
-                    </div>
-                </div>
-            </div>
-            {/volist}
+    <div class="chart-cont">
+        <!--***** CONTENT *****-->
+        <div class="top-option third-button container">
+            <a href="{:url('admin/mini/addActive')}" class="btn btn-outline-primary">+ 添加推广活动</a>
+        </div>
+        <hr>
+        <div class="container">
+            <table class="table table-hover">
+                <thead>
+                <tr class="bg-info text-white">
+                    <th>活动</th>
+                    <th>渠道</th>
+                    <th>小程序</th>
+                    <th>监控链接</th>
+                    <th>操作</th>
+                </tr>
+                </thead>
+                <tbody class="panel-heading">
+                {volist name='list' id='item' key="index" }
+                <tr>
+                    <td>{$item.name}</td>
+                    <td>{$item.sname}</td>
+                    <td>{$item.mname}</td>
+                    <td class=""><span>{$item.path}</span>
+                        <a rel="nofollow" href="#" class="text-itemcopy-item d-inline-block ml-2">复制</a></td>
+                    <td class="">
+                        <a href="{:url('admin/mini/delActive', array('id'=>$item['id']))}" class="btn-link blue">删除</a>
+                    </td>
+                </tr>
+                {/volist}
+                </tbody>
+            </table>
+            {$page}
         </div>
     </div>
 </div>
 {/block}
 {block name="script"}
+<script src="__JS__/clipboard.min.js"></script>
 <script>
-    $('select').change(function(){
-        var $btn = $(this).closest('.card').find('button');
-        if($(this).val() == '-1')
-            $btn.attr('disabled',true);
-        else
-            $btn.attr('disabled',false);
+    new ClipboardJS('.copy-item', {
+        target: function(trigger) {
+            return trigger.previousElementSibling;
+        }
     });
 </script>
 {/block}

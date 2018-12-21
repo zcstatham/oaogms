@@ -9,8 +9,6 @@
 namespace app\common\model;
 
 
-use think\facade\Log;
-
 class Mini extends Base
 {
 
@@ -45,10 +43,5 @@ class Mini extends Base
     public function channelInfo()
     {
         return $this->hasOne('SysAdmin','sid','sid');
-    }
-
-    public function bindInfo()
-    {
-        return $this->hasMany('MiniExtend','mid','mid');
     }
 }

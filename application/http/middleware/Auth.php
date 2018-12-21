@@ -14,6 +14,9 @@ class Auth
 
     public function handle(Request $request, \Closure $next)
     {
+        if(!is_login()){
+            redirect('/login');
+        }
         $this->url_path = strtolower($request->module() . '/' . $request->controller() . '/' . $request->action());
         if (!in_array(strtolower($request->url()), array('admin/index/login', 'admin/index/logout', 'admin/index/verify'))) {
             // 是否是超级管理员
@@ -45,7 +48,7 @@ class Auth
             if(!$authstatus && $request->header('referer') ){
                 $this->error('未授权访问!',$request->header('referer'));
             }else if(!$authstatus){
-                $this->error('未授权访问!','/login');
+                $this->error('未授权访问!','admin/index/login');
             }
             $this->setMenu($request);
         }

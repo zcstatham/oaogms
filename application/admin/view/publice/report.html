@@ -1,5 +1,5 @@
 {extend name="public/base" /}
-{block name="script"}
+{block name="style"}
 <style>
     .card-status {
         position: absolute;
@@ -233,7 +233,6 @@
         color: #467fcf;
         background: #edf2fa;
     }
-
     .selectgroup-item:not(:last-child) .selectgroup-button {
         border-top-right-radius: 0;
         border-bottom-right-radius: 0;
@@ -299,19 +298,19 @@
             <div class="form-group">
                 <div class="selectgroup">
                     <label class="selectgroup-item">
-                        <input type="radio" name="value" value="today" checked class="selectgroup-input">
+                        <input type="radio" name="dategroup" value="today" checked class="selectgroup-input">
                         <span class="selectgroup-button">今天</span>
                     </label>
                     <label class="selectgroup-item">
-                        <input type="radio" name="value" value="yesterday" class="selectgroup-input">
+                        <input type="radio" name="dategroup" value="yesterday" class="selectgroup-input">
                         <span class="selectgroup-button">昨天</span>
                     </label>
                     <label class="selectgroup-item">
-                        <input type="radio" name="value" value="week" class="selectgroup-input">
+                        <input type="radio" name="dategroup" value="week" class="selectgroup-input">
                         <span class="selectgroup-button">近七天</span>
                     </label>
                     <label class="selectgroup-item">
-                        <input type="radio" name="value" value="month" class="selectgroup-input">
+                        <input type="radio" name="dategroup" value="month" class="selectgroup-input">
                         <span class="selectgroup-button">近30天</span>
                     </label>
                 </div>
@@ -440,8 +439,6 @@
 
         getCharts({id:1});
         $('.selectgroup-button').on('click',function(e){
-            e.stopPropagation();
-            e.preventDefault();
             var id = $('#mini').val();
             var date = $(this).prev('input').val();
             var data = {

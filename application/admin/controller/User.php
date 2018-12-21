@@ -34,7 +34,7 @@ class User extends Base
             ->where($map)->order($order)
             ->paginate(config('siteinfo.list_rows'), false);
         foreach ($list as $item){
-            if($item->groupId && $item->groupId->groupInfo->title){
+            if($item->groupId && $item->groupId->groupInfo && $item->groupId->groupInfo->title){
                 $item['group_name'] = $item->groupId->groupInfo->title;
             }
         }

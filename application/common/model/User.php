@@ -10,6 +10,8 @@ namespace app\common\model;
 
 class User extends Base {
 
+    protected $scret = 'ksjKDdfsd9';
+
     public function user_extend()
     {
         return $this->hasMany('UserExtend');
@@ -29,49 +31,69 @@ class User extends Base {
         ];
     }
 
-    public function login($code,$uInfo,$mInfo,$now){
-        $wx = new \wx\wxLogin($mInfo['appid'],$mInfo['appSecret']);
+    public function login($token){
+        $uid = decrypt($token,$this->scret);
+        if(!$this->where('uid',$uid)->find('uid')){
+            return false;
+        }
+        $result = $this->save(array(
+            'last_login_ip'=>get_client_ip(),
+        ),['uid' => $uid]);
+        if(!$result){
+            return false;
+        }
+        return true;
+    }
+
+//    public function login($code,$uInfo,$mInfo,$now){
+//        $wx = new \wx\wxLogin($mInfo['appid'],$mInfo['appSecret']);
+//        $wxInfo = $wx->wxLogin($code);
+//        if($wxInfo['errcode ']!=0){
+//            return $wxInfo['errcode '];
+//        }
+//        try{
+//            $uid = $this->where('u_openid',$wxInfo['openid'])->find('u_id');
+//        }catch (\think\Exception\DbException $e){
+//            return -1;
+//        }
+//        if($uid){
+//            $this->save(array(
+//                'u_last_login_ip'=>$uInfo['ip'],
+//                'u_last_login_timestamp'=>$now
+//            ),['u_id' => $uid]);
+//            return $uid;
+//        }else {
+//            $uInfo['openid'] = $wxInfo['openid'];
+//            $uInfo['mid'] = $mInfo['m_id'];
+//            return $this->register($uInfo,$now);
+//        }
+//    }
+
+    public function register($mid,$code){
+        $mInfo = model('Mini')->get($mid);
+        $wx = new \wx\wxLogin($mInfo['appid'],$mInfo['appsecret']);
         $wxInfo = $wx->wxLogin($code);
         if($wxInfo['errcode ']!=0){
             return $wxInfo['errcode '];
         }
-        try{
-            $uid = $this->where('u_openid',$wxInfo['openid'])->find('u_id');
-        }catch (\think\Exception\DbException $e){
-            return -1;
+        $uid = $this->where('openid',$wxInfo['openid'])->find('uid');
+        if(!$uid) {
+            $user = new User;
+            $user->nickname = $wxInfo['nickname'];
+            $user->openid = $wxInfo['avatarUrl'];
+            $user->sex = $wxInfo['gender'];
+            $user->reg_ip = get_client_ip();
+            $user->last_login_ip = get_client_ip();
+            $user->save();
+            $user->user_extend()->save(array(
+                'uid' => $user->uid,
+                'mid' => $mid,
+                'reg_ip' => $user->reg_ip,
+                'last_login_ip' => $user->reg_ip,
+            ));
+            return true;
         }
-        if($uid){
-            $this->save(array(
-                'u_last_login_ip'=>$uInfo['ip'],
-                'u_last_login_timestamp'=>$now
-            ),['u_id' => $uid]);
-            return $uid;
-        }else {
-            $uInfo['openid'] = $wxInfo['openid'];
-            $uInfo['mid'] = $mInfo['m_id'];
-            return $this->register($uInfo,$now);
-        }
-    }
-
-    public function register($uInfo,$now){
-        $user = new User;
-        $user->u_nickname = $uInfo['nickname'];
-        $user->u_openid = $uInfo['avatarUrl'];
-        $user->u_sex = $uInfo['gender'];
-        $user->u_reg_ip = $uInfo['ip'];
-        $user->u_last_login_ip = $uInfo['ip'];
-        $user->u_last_login_timestamp = $now;
-        $user->u_create_timestamp = $now;
-        $user->save();
-        $user->user_extend()->save(array(
-            'u_id'=>$user->u_id,
-            'm_id'=>$uInfo['mid'],
-            'ue_reg_ip'=>$uInfo['mid'],
-            'ue_last_login_ip'=>$uInfo['mid'],
-            'ue_last_login_timestamp'=>$now,
-            'ue_creat_timestamp'=>$now,
-        ));
-        return $user->u_id;
+        return $uid;
     }
 
     public function updataLog($mid,$uid,$ip,$now){

@@ -8,6 +8,9 @@
 
 namespace app\admin\controller;
 
+use app\common\model\ChannelActive;
+use think\Db;
+
 /**
  * Class Mini
  * @title 小程序
@@ -33,7 +36,8 @@ class Mini extends Base
      */
     public function index()
     {
-        $list = $this->model->has('bindInfo','<',10,'meid', 'LEFT')->where([ 'sid' => $this->miniGroup])->order('mid')->paginate(config('siteinfo.list_rows'), false);
+        $list = $this->model->order('mid')
+            ->paginate(config('siteinfo.list_rows'), false);
         $data = array(
             'group' => $this->miniGroup,
             'list' => $list,
@@ -51,52 +55,38 @@ class Mini extends Base
      */
     public function channel()
     {
-        $own = $this->model->has('bindInfo','<',10,'meid', 'LEFT')->where(['sid'=> $this->miniGroup])->select()->toArray();
-        foreach ($own as &$minis){
-            $ids = model('MiniExtend')->where('bindid',$minis['mid'])->field('mid')->select()->toArray();
-            $ids = array_map(function($v){
-                return $v['mid'];
-            },$ids);
-            $minis['bindList'] = $ids;
-        }
-        if ($this->miniGroup != 1) {
-            $map = array(
-                ['sid' ,'=', 1]
-            );
-        } else {
-            $map = array(['sid', '<>', 1]);
-        }
-        $map[] = ['Mini.mid','NOT IN',implode(',',$ids)];
-        $list = $this->model->has('bindInfo','<',10,'meid', 'LEFT')->where($map)->select();
+        $list = Db::view('ChannelActive', ['aid' => 'id', 'name', 'path', 'create_timestamp'])
+            ->view('SysAdmin', ['nickname' => 'sname'], 'ChannelActive.sid=SysAdmin.sid')
+            ->view('Mini', ['name' => 'mname'], 'ChannelActive.mid=Mini.mid')
+            ->paginate(config('siteinfo.list_rows'), false);
         $data = array(
-            'group' => $this->miniGroup,
             'list' => $list,
-            'own' => $own,
+            'page' => $list->render(),
         );
-        $this->setMeta($this->miniGroup == 1?'渠道小程序列表':'OAO小程序列表');
+        $this->setMeta('推广活动');
         $this->assign($data);
-        return $this->fetch('mini/channel');
+        return $this->fetch();
     }
 
-    private function miniList($map,$isPaginate = false)
+    private function miniList($map, $isPaginate = false)
     {
         $order = ['mid' => 'desc'];
-        $list = $isPaginate?
-            $this->model->has('bindInfo','<',10,'meid', 'LEFT')->where($map)->order($order)->paginate(config('siteinfo.list_rows'), false):
-            $this->model->has('bindInfo','<',10,'meid', 'LEFT')->where($map)->order($order)->select();
+        $list = $isPaginate ?
+            $this->model->has('bindInfo', '<', 10, 'meid', 'LEFT')->where($map)->order($order)->paginate(config('siteinfo.list_rows'), false) :
+            $this->model->has('bindInfo', '<', 10, 'meid', 'LEFT')->where($map)->order($order)->select();
         //绑定列表
-        foreach ($list as $minis){
+        foreach ($list as $minis) {
             $binds = $minis->bindInfo;
-            if(!$binds->isEmpty()){
+            if (!$binds->isEmpty()) {
                 $ids = [];
-                foreach ($binds as $bind){
+                foreach ($binds as $bind) {
                     $ids[] = abs($bind['bindid']);
                 }
                 $minis['bindList'] = $this->model->all($ids);
-                foreach ($minis['bindList'] as $mini){
-                    if($mini['sid'] == 1){
+                foreach ($minis['bindList'] as $mini) {
+                    if ($mini['sid'] == 1) {
                         $mini['channel'] = 'OAOGMES';
-                    }else {
+                    } else {
                         $mini['channel'] = $mini->channelInfo->nickname;
                     }
                 }
@@ -115,9 +105,9 @@ class Mini extends Base
         if ($this->request->isPost()) {
             $data = $this->request->param();
             $data['sid'] = $this->miniGroup;
-            $valid = $this->validate($data,'Mini');
-            if($valid!== true){
-                $this->error('验证失败：'.$valid);
+            $valid = $this->validate($data, 'Mini');
+            if ($valid !== true) {
+                $this->error('验证失败：' . $valid);
             }
             $result = $this->model->save($data);
             if ($result) {
@@ -187,6 +177,42 @@ class Mini extends Base
         }
     }
 
+    public function addActive()
+    {
+        if ($this->request->isPost()) {
+            $data = $this->request->param();
+            $params = getSurveyParam($data['mid'], $data['sid']);
+            $data['path'] = $data['path'] ?: 'pages/index/index';
+            $data['path'] = stripos($data['path'], '?') === false ? $data['path'] . '&' . $params : $data['path'] . '？' . $params;
+            $result = model('ChannelActive')->save($data);
+            if ($result) {
+                $this->success('新增成功', 'admin/mini/channel');
+            } else {
+                $this->error('新增失败');
+            }
+        } else {
+            $data = array(
+                'keyList' => ChannelActive::getKeyList(),
+            );
+            $this->assign($data);
+            $this->setMeta('新增推广活动');
+            return $this->fetch('public/edit');
+        }
+        return false;
+    }
+
+    public function delActive($id)
+    {
+        if (empty($id)) {
+            $this->error('请选择要操作的数据!');
+        }
+        if (model('ChannelActive')->where('aid', $id)->delete()) {
+            $this->success('删除成功');
+        } else {
+            $this->error('删除失败！');
+        }
+    }
+
     /**
      * @title 绑定小程序
      * @param $id
@@ -196,9 +222,9 @@ class Mini extends Base
     public function bindMini($id, $bindid)
     {
         //绑定小程序
-        $result = model('MiniExtend')->save(['mid'=>$id,'bindid'=>$bindid]);
-        if($result){
-            $this->success('申请成功','admin/mini/index');
+        $result = model('MiniExtend')->save(['mid' => $id, 'bindid' => $bindid]);
+        if ($result) {
+            $this->success('申请成功', 'admin/mini/index');
         }
         return false;
     }
@@ -213,11 +239,11 @@ class Mini extends Base
         $list = $this->model->get($id);
         $status = session('user_auth.sid');
         $ids = [];
-        foreach (explode('|',$list['status']) as $id){
+        foreach (explode('|', $list['status']) as $id) {
             $ids[] = abs($id);
         }
-        if(!in_array($status,$ids) || empty($ids)){
-            $list['status'] .= '|+'.$status;
+        if (!in_array($status, $ids) || empty($ids)) {
+            $list['status'] .= '|+' . $status;
         }
         $this->success('申请成功，请等待审核');
         return false;
@@ -233,7 +259,7 @@ class Mini extends Base
         //小程序信息
         $list = $this->model->cache(true)->get($id);
         $bind = $list['status'];
-        if($bind) {
+        if ($bind) {
             foreach ($bind as $mid) {
                 $ids[] = abs($mid);
             }
@@ -247,21 +273,21 @@ class Mini extends Base
                     $binding[] = $mini;
                 }
             }
-            $data=array(
-                'list'=>$list,
-                'bind'=>array(
-                    array('title'=>'申请中', 'list'=>$binding),
-                    array('title'=>'已绑定', 'list'=>$bind),
-                    array('title'=>'已解绑', 'list'=>$unbind)
+            $data = array(
+                'list' => $list,
+                'bind' => array(
+                    array('title' => '申请中', 'list' => $binding),
+                    array('title' => '已绑定', 'list' => $bind),
+                    array('title' => '已解绑', 'list' => $unbind)
                 )
             );
-        }else {
-            $data=array(
-                'list'=>$list,
-                'bind'=>array(
-                    array('title'=>'申请中', 'list'=>[]),
-                    array('title'=>'已绑定', 'list'=>[]),
-                    array('title'=>'已解绑', 'list'=>[])
+        } else {
+            $data = array(
+                'list' => $list,
+                'bind' => array(
+                    array('title' => '申请中', 'list' => []),
+                    array('title' => '已绑定', 'list' => []),
+                    array('title' => '已解绑', 'list' => [])
                 )
             );
         }

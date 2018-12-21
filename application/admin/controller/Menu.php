@@ -70,7 +70,7 @@ class Menu extends Base
         } else {
             $this->assign('info', array('pid' => $pid));
             $menus = $this->menu->all();
-            $tree  = new \doc\Tree();
+            $tree  = new \com\Tree();
             $menus = $tree->toFormatTree($menus);
             if (!empty($menus)) {
                 $menus = array_merge(array(0 => array('id' => 0, 'title_show' => '顶级菜单')), $menus);
@@ -114,7 +114,7 @@ class Menu extends Base
             }catch (\think\Exception $e){
                 $this->error('获取后台菜单信息错误：'.$e->getMessage());
             }
-            $tree  = new \doc\Tree();
+            $tree  = new \com\Tree();
             $menus = $tree->toFormatTree($menus);
             $menus = array_merge(array(0 => array('id' => 0, 'title_show' => '顶级菜单')), $menus);
             $data = array(

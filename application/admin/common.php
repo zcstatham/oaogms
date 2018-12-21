@@ -20,10 +20,10 @@ function own(){
  * @return array
  */
 function profile($map){
-    $list = db('mini_action_log')
+    $list = db('mini_log')
         ->where($map)
-        ->field(['sid','type','remark','IFNULL(COUNT(*),0)'=>'count'])
-        ->group('sid,type')->select();
+        ->field(['aid','type','remark','IFNULL(COUNT(*),0)'=>'count'])
+        ->group('aid,type')->select();
     $charts = config('siteinfo.charts');
     foreach ($charts as $i=>$v){
         $data[$i] = array('total'=>0, 'oao'=>0, 'channel'=>0);
@@ -33,7 +33,7 @@ function profile($map){
             !isset($data[$i]['title']) && ($data[$i]['title'] = $v);
             if($item['type'] == $i){
                 $data[$i]['total'] += $item['count'];
-                if($item['sid'] == 1){
+                if($item['aid'] == 0){
                     $data[$i]['oao'] += $item['count'];
                 }else{
                     $data[$i]['channel'] += $item['count'];
@@ -44,6 +44,10 @@ function profile($map){
     return $data;
 }
 
+function getSurveyParam($mid,$sid){
+    $entrystr = 'oao_media_id='.encodeN($mid,config('siteinfo.m_param_salt')).'&oao_link_key='.encrypt($sid,config('siteinfo.s_param_salt'));
+    return $entrystr;
+}
 
 function getDateMap($str){
     $timeFormat = '%Y-%m-%d';

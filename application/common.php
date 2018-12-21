@@ -253,3 +253,45 @@ function decrypt($data,$key){
     }
     return $str;
 }
+
+/**
+ * 加解密 返回字母+ 数字
+ * @param $tex
+ * @param null $key
+ * @return string
+ */
+function encodeN($tex, $key = null)
+{
+    $key = $key ? $key : "test";
+    $md5str = preg_replace('|[0-9/]+|', '', md5($key));
+    $key = substr($md5str, 0, 2);
+    $texlen = strlen($tex);
+    $rand_key = md5($key);
+    $reslutstr = "";
+    for ($i = 0; $i < $texlen; $i++) {
+        $reslutstr .= $tex{$i} ^ $rand_key{$i % 32};
+    }
+    $reslutstr = trim(base64_encode($reslutstr), "==");
+    $reslutstr = $key . substr(md5($reslutstr), 0, 3) . $reslutstr;
+    return $reslutstr;
+}
+
+function decodeN($tex)
+{
+    $key = substr($tex, 0, 2);
+    $tex = substr($tex, 2);
+    $verity_str = substr($tex, 0, 3);
+    $tex = substr($tex, 3);
+    if ($verity_str != substr(md5($tex), 0, 3)) {
+        //完整性验证失败
+        return false;
+    }
+    $tex = base64_decode($tex);
+    $texlen = strlen($tex);
+    $reslutstr = "";
+    $rand_key = md5($key);
+    for ($i = 0; $i < $texlen; $i++) {
+        $reslutstr .= $tex{$i} ^ $rand_key{$i % 32};
+    }
+    return $reslutstr;
+}

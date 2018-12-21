@@ -39,39 +39,84 @@ class Publice extends Base
      * @return mixed
      */
     public function channel($id = 1,$granularity='today'){
-        $this->assign($this->getChannelData($id,$granularity));
+        $this->assign('list',$this->getChannelData($id = 1,$granularity='today'));
         return $this->fetch();
     }
 
-    public function channelData($id = 1,$granularity='today'){
-        return json($this->getChannelData($id,$granularity));
+    public function channelData($id = 1,$granularity='today',$type='register'){
+        return json($this->getActiveChartData($id,$granularity,$type='register'));
     }
 
     public function getChannelData($id = 1,$granularity='today'){
         $dateformat = getDateMap($granularity);
-        $sid = getUserType();
-        if($sid == 1){
-            $cmap[] = ['sid','<>',1];
-        }else{
-            $cmap[] = ['sid','=',$sid];
-        }
-        $charts = $this->getChartData($id,$granularity,$cmap);
-        $list = Db::view('Channel','cid,name')
-            ->view('ChannelActive','mid,name','Channel.cid=ChannelActive.cid')->select();
-        foreach ($list as $item){
+        $list = Db::view('SysAdmin','sid,nickname')
+            ->view('ChannelActive','aid,mid,name','SysAdmin.sid=ChannelActive.sid')->select();
+        foreach ($list as &$item){
             $pmap = array(
-                ['id','=',$id],
                 $dateformat[0],
-                ['sid','=',$item['cid']]
+                ['aid','=',$item['aid']]
             );
             $profile = profile($pmap);
-            $item->merge($profile);
+            $item = array_merge($item,$profile);
         }
-        return array(
-            'charts'=>$charts,
-            'list'=>$list
-        );
+        return $list;
+    }
 
+    /**
+     * 获取渠道统计
+     * @param $id * 小程序id
+     * @param $dateType * 统计区间
+     * @param $type * 统计类型
+     * @param null $sid * 渠道id
+     */
+    public function getActiveChartData($id,$dateType,$type,$sid = null){
+        $dateformat = getDateMap($dateType);
+        $timeFormat = $dateformat[1];
+        $dateformat[0][0] = 'log.create_timestamp';
+        $map[] = $dateformat[0];
+        // 已渠道为x 轴,
+        $subsql  = Db::view('mini_log log',
+            ['type', 'remark','aid',
+            'IFNULL(COUNT(log.id),0)' => 'count',
+            'DATE_FORMAT(log.create_timestamp, "' . $timeFormat . '")' => 'date'])
+            ->view('channel_active active','name','log.aid=active.aid')
+            ->view('mini','mid','mini.mid=active.mid')
+            ->view('sys_admin admin','nickname','admin.sid=active.sid')
+            ->where($map)
+            ->where('log.type',$type)
+            ->group('log.aid')
+            ->buildSql();
+        if($dateType == 'today') {
+            for ($i = 0; $i < 24; $i++) {
+                $d = str_pad($i, 2, "0", STR_PAD_LEFT);
+                $union[] = "SELECT 0,'$type','',0,'$d:00:00'";
+                $union[] = "SELECT 1,'$type','',0,'$d:00:00'";
+            }
+            $list = Db::query('SELECT * FROM'.$subsql.'AS d GROUP BY d.date,d.aid');
+        }else {
+            $list = db('calendar')
+                ->field('b.nickname,b.remark,IFNULL(b.count,0) as count,a.date')
+                ->alias('a')
+                ->join([$subsql => 'b'], 'a.date = b.date')
+                ->select();
+        }
+        $data = array(
+            'labels'=>[],
+            'datasets'=>array(
+            )
+        );
+        foreach ($list as $item) {
+            if(!in_array($item['nickname'], $data['labels'])){
+                $data['labels'][] = $item['name'];
+            }
+            if($item['aid'] != 0){
+                $data['datasets'][$item['aid']]['data'][$item['date']] = $item['count'];
+            }
+            foreach ($data['datasets'] as &$v){
+                $v['data'] = array_values($v['data']);
+            }
+        }
+        return $data;
     }
 
     public function chart($id=1,$granularity='today'){
@@ -102,7 +147,7 @@ class Publice extends Base
                     $union[]= "SELECT 0,'$chartname','',0,'$d:00:00'";
                     $union[]= "SELECT 1,'$chartname','',0,'$d:00:00'";
                 }
-                $subsql = db('mini_action_log')
+                $subsql = db('mini_log')
                     ->where($map)
                     ->where('type',$chartname)
                     ->field($field)
@@ -111,7 +156,7 @@ class Publice extends Base
                     ->buildSql();
                 $$chartname = Db::query('SELECT * FROM'.$subsql.'AS d GROUP BY d.date,d.sid');
             }else {
-                $subsql  = db('mini_action_log')
+                $subsql  = db('mini_log')
                     ->where($map)
                     ->where('type',$chartname)
                     ->field($field)
