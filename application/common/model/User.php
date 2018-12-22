@@ -33,7 +33,7 @@ class User extends Base {
 
     public function login($token){
         $uid = decrypt($token,$this->scret);
-        if(!$this->where('uid',$uid)->find('uid')){
+        if($uid =='' || !$this->where('uid',$uid)->find('uid')){
             return false;
         }
         $result = $this->save(array(
@@ -73,8 +73,8 @@ class User extends Base {
         $mInfo = model('Mini')->get($mid);
         $wx = new \wx\wxLogin($mInfo['appid'],$mInfo['appsecret']);
         $wxInfo = $wx->wxLogin($code);
-        if($wxInfo['errcode ']!=0){
-            return $wxInfo['errcode '];
+        if($wxInfo['errcode'] && $wxInfo['errcode']!=0){
+            return $wxInfo['errcode'];
         }
         $uid = $this->where('openid',$wxInfo['openid'])->find('uid');
         if(!$uid) {

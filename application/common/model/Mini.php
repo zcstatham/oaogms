@@ -18,7 +18,8 @@ class Mini extends Base
         array('name'=>'id','title'=>'序号','type'=>'hidden'),
         array('name'=>'name','title'=>'名称','type'=>'text','help'=>''),
         array('name'=>'type','title'=>'类型','type'=>'radio','option'=>array('1'=>'小程序','0'=>'小游戏'),'help'=>''),
-        array('name'=>'appid','title'=>'appId','type'=>'text','help'=>''),
+        array('name'=>'appid','title'=>'AppId','type'=>'text','help'=>''),
+        array('name'=>'appsecret','title'=>'AppSecret','type'=>'text','help'=>''),
         array('name'=>'remark','title'=>'描述','type'=>'text','help'=>''),
         array('name'=>'options', 'title'=>'操作', 'type'=>'options', 'help'=>'', 'option'=>array(
             'line'=>array(

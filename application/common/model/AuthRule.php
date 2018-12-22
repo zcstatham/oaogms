@@ -92,7 +92,7 @@ class AuthRule extends Base
     }
 
     protected function parserDoc($text){
-        $doc = new \doc\Doc();
+        $doc = new \com\Doc();
         return $doc->parse($text);
     }
 }

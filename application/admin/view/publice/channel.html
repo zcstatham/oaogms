@@ -155,13 +155,6 @@
                     </div>
                     <div class="card-content">
                         <h4 class="title">新增访问</h4>
-                        <p class="category">
-                            <span class="text-success"><i class="fa fa-long-arrow-up"></i> 55% </span> increase in today sales.</p>
-                    </div>
-                    <div class="card-footer">
-                        <div class="stats">
-                            <i class="fa fa-clock-o"></i> updated 4 minutes ago
-                        </div>
                     </div>
                 </div>
             </div>
@@ -172,13 +165,6 @@
                     </div>
                     <div class="card-content">
                         <h4 class="title">新增用户</h4>
-                        <p class="category">
-                            <span class="text-success"><i class="fa fa-long-arrow-up"></i> 55% </span> increase in today sales.</p>
-                    </div>
-                    <div class="card-footer">
-                        <div class="stats">
-                            <i class="fa fa-clock-o"></i> updated 4 minutes ago
-                        </div>
                     </div>
                 </div>
             </div>
@@ -189,13 +175,6 @@
                     </div>
                     <div class="card-content">
                         <h4 class="title">新增授权</h4>
-                        <p class="category">
-                            <span class="text-success"><i class="fa fa-long-arrow-up"></i> 55% </span> increase in today sales.</p>
-                    </div>
-                    <div class="card-footer">
-                        <div class="stats">
-                            <i class="fa fa-clock-o"></i> updated 4 minutes ago
-                        </div>
                     </div>
                 </div>
             </div>
@@ -206,13 +185,6 @@
                     </div>
                     <div class="card-content">
                         <h4 class="title">广告浏览次数</h4>
-                        <p class="category">
-                            <span class="text-success"><i class="fa fa-long-arrow-up"></i> 55% </span> increase in today sales.</p>
-                    </div>
-                    <div class="card-footer">
-                        <div class="stats">
-                            <i class="fa fa-clock-o"></i> updated 4 minutes ago
-                        </div>
                     </div>
                 </div>
             </div>
@@ -262,15 +234,7 @@
         'auth': document.getElementById("auth").getContext('2d'),
         'browseAd': document.getElementById("browseAd").getContext('2d')
     };
-    var config = {
-        type: 'bar',
-        options: {
-            responsive: true,
-            legend: {
-                position: 'top',
-            }
-        }
-    };
+
     var colorNames = Object.keys(window.chartColors);
     getCharts({id:1});
     $('.selectgroup-button').on('click',function(e){
@@ -278,8 +242,8 @@
         var date = $(this).prev('input').val();
         var data = {
             id: id?id:1,
-            date:date
-        }
+            dateType:date
+        };
         getCharts(data);
     });
     $('#mini').change(function(){
@@ -289,12 +253,33 @@
 
     function getCharts(data){
         $.getJSON("{:url('admin/publice/channelData')}",data,function(charts){
-            config.data = [];
             $.each(charts,function (index,chart){
-                config.data['labels']= chart.labels;
-                config.data['datasets']=[];
+                var config = {
+                    type: 'bar',
+                    data:{
+                        labels: chart.labels,
+                        datasets: []
+                    },
+                    options: {
+                        responsive: true,
+                        tooltips: {
+                            mode: 'index',
+                            intersect: false
+                        },
+                        scales: {
+                            xAxes: [{
+                                maxBarThickness: 60
+                            }],
+                            yAxes: [{
+                                ticks: {
+                                    min: 0
+                                }
+                            }]
+                        }
+                    }
+                };
                 $.each(chart.datasets,function(i,datas){
-                    var colorName = colorNames[config.data['datasets'] % colorNames.length];
+                    var colorName = colorNames[config.data['datasets'].length % colorNames.length];
                     var dsColor = window.chartColors[colorName];
                     var data = {
                         label: '',
@@ -302,14 +287,14 @@
                         backgroundColor: dsColor,
                         borderColor:dsColor,
                         borderWidth: 1
-                    }
+                    };
                     $.each(datas.data,function(i,d) {
                         data.label = d[1];
                         data.data[0] = d[0];
-                    })
+                    });
                     config.data['datasets'].push(data)
                 });
-                new Chart(chartbox[index], $.extend({},config))
+                new Chart(chartbox[index], config)
             });
         });
     }

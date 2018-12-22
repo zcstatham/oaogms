@@ -45,7 +45,7 @@ function profile($map){
 }
 
 function getSurveyParam($mid,$sid){
-    $entrystr = 'oao_media_id='.encodeN($mid,config('siteinfo.m_param_salt')).'&oao_link_key='.encrypt($sid,config('siteinfo.s_param_salt'));
+    $entrystr = 'oao_media_id='.encodeN($mid,config('siteinfo.m_param_salt')).'&oao_link_key='.encodeN($sid,config('siteinfo.s_param_salt'));
     return $entrystr;
 }
 

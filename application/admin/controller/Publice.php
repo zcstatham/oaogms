@@ -34,17 +34,23 @@ class Publice extends Base
     }
 
     /**
-     * 推广概况
+     * @title 推广概况
      * @param int $id
      * @return mixed
      */
-    public function channel($id = 1,$granularity='today'){
-        $this->assign('list',$this->getChannelData($id = 1,$granularity='today'));
+    public function channel($id = 1,$dateType='today'){
+        $this->assign('list',$this->getChannelData($id = 1,$dateType='today'));
         return $this->fetch();
     }
 
-    public function channelData($id = 1,$granularity='today',$type='register'){
-        return json($this->getActiveChartData($id,$granularity,$type='register'));
+    /**
+     * @title 获取渠道数据
+     * @param int $id
+     * @param string $dateType
+     * @return \think\response\Json
+     */
+    public function channelData($id = 1,$dateType='today'){
+        return json($this->getActiveChartData($id,$dateType));
     }
 
     public function getChannelData($id = 1,$granularity='today'){
@@ -69,37 +75,28 @@ class Publice extends Base
      * @param $type * 统计类型
      * @param null $sid * 渠道id
      */
-    public function getActiveChartData($id,$dateType,$type,$sid = null){
+    public function getActiveChartData($id,$dateType){
+        $sid = session('user_auth.sid');
+        if($sid > 10){
+            $aid = db('channel_active')->field('aid')->where('sid',$sid)->select();
+            $map[] = ['log.aid','in',$aid[0]];
+        }
         $dateformat = getDateMap($dateType);
-        $timeFormat = $dateformat[1];
         $dateformat[0][0] = 'log.create_timestamp';
         $map[] = $dateformat[0];
         $charts = config('siteinfo.charts');
         foreach ($charts as $chartname=>$chartlabel) {
-            $subsql  = Db::view('mini_log log',
+            $$chartname  = Db::view('mini_log log',
                 ['type', 'remark','aid',
-                    'IFNULL(COUNT(log.id),0)' => 'count',
-                    'DATE_FORMAT(log.create_timestamp, "' . $timeFormat . '")' => 'date'])
+                    'IFNULL(COUNT(log.id),0)' => 'count'])
                 ->view('channel_active active','name','log.aid=active.aid')
                 ->view('mini','mid','mini.mid=active.mid')
                 ->view('sys_admin admin','nickname','admin.sid=active.sid')
                 ->where($map)
+                ->where('log.mid','=',$id)
+                ->where('log.type',$chartname)
                 ->group('log.aid,log.type')
-                ->buildSql();
-            if($dateType == 'today') {
-                for ($i = 0; $i < 24; $i++) {
-                    $d = str_pad($i, 2, "0", STR_PAD_LEFT);
-                    $union[] = "SELECT 0,'$type','',0,'$d:00:00'";
-                    $union[] = "SELECT 1,'$type','',0,'$d:00:00'";
-                }
-                $$chartname = Db::query('SELECT * FROM'.$subsql.'AS d GROUP BY d.date,d.aid');
-            }else {
-                $$chartname = db('calendar')
-                    ->field('b.nickname,b.remark,IFNULL(b.count,0) as count,a.date')
-                    ->alias('a')
-                    ->join([$subsql => 'b'], 'a.date = b.date')
-                    ->select();
-            }
+                ->select();
             $data[$chartname] = $this->formChannelChart($$chartname);
         }
         return $data;
@@ -202,6 +199,7 @@ class Publice extends Base
         }
         return $data;
     }
+
     private function formChannelChart($list)
     {
         $data = array(
@@ -214,12 +212,14 @@ class Publice extends Base
                 $data['labels'][$item['aid']] = $item['nickname'];
             }
             if($item['aid'] != 0){
-                $data['datasets'][$item['aid']]['data'][$item['date']] = [$item['count'],$item['name']];
+                $data['datasets'][$item['aid']]['data'][] = [$item['count'],$item['name']];
             }
         }
+        $data['labels'] = array_values($data['labels']);
         foreach ($data['datasets'] as &$v){
             $v['data'] = array_values($v['data']);
         }
+
         return $data;
     }
 }

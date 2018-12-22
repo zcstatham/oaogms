@@ -101,7 +101,12 @@ class Auth
             }
         }
 
-        // 查找当前子菜单
+        if(count($menu['main'])<=0){
+            Container::get('app')['view']->assign('__menu__', $menu);
+            return false;
+        }
+
+            // 查找当前子菜单
         $pid = db('menu')->where("pid !=0 AND url like '%{$hover_url}%'")->value('pid');
         $id  = db('menu')->where("pid = 0 AND url like '%{$hover_url}%'")->value('nid');
         $pid = $pid ? $pid : $id;

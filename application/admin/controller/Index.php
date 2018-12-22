@@ -67,7 +67,8 @@ class Index extends Base{
 
             $uid  = model('SysAdmin')->login($username, $password);
             if ($uid) {
-                $this->success('登录成功！', url('admin/index/index'));
+                $url = $uid > 10? 'admin/publice/channel':'admin/index/index';
+                $this->success('登录成功！', $url);
             } else {
                 $this->error( '登录失败');
             }

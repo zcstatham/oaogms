@@ -10,6 +10,7 @@ namespace app\api\controller;
 
 
 use think\Controller;
+use think\facade\Log;
 
 class Index extends controller
 {
@@ -33,11 +34,11 @@ class Index extends controller
 
     //访问接口
     public function login(){
-        if(model('User')->login($this->request->post('token'))){
+        Log::record($this->request);
+        if(model('User')->login($this->request->param('token'))){
             $this->data['token'] = $_POST['token'];
             if(!$this->log('login')){
                 $this->data['code']=0;
-                return json($this->data);
             }
             return json($this->data);
         }
@@ -46,7 +47,7 @@ class Index extends controller
     }
 
     //授权接口
-    public function register(){
+    public function authed(){
         $uid = model('User')->register($this->mid,$this->request->post('code'));
         if($uid === true ) {
             if(!$this->log('register')){
@@ -81,14 +82,16 @@ class Index extends controller
             'aid' => $this->aid,
             'mid' => $this->mid
         );
+        Log::record($data);
         return model('MiniLog')->save($data);
     }
 
     protected function checkDate(){
-        $this->mid = decodeN($this->request->post('oao_media_id'));
-        $this->aid = $this->request->post('oao_link_key');
-        $this->aid = $this->aid?decodeN($this->aid):0;
-        if(!isset($mid)){
+        $this->mid = decodeN($this->request->param('oao_media_id'));
+        $aid = $this->request->param('oao_link_key');
+        $this->aid = $aid?decodeN($aid):0;
+        trace(['参数检测',$this],'info');
+        if(!isset($this->mid)){
             json_error_exception('1003');
         }
     }

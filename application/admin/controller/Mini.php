@@ -183,7 +183,7 @@ class Mini extends Base
             $data = $this->request->param();
             $params = getSurveyParam($data['mid'], $data['sid']);
             $data['path'] = $data['path'] ?: 'pages/index/index';
-            $data['path'] = stripos($data['path'], '?') === false ? $data['path'] . '&' . $params : $data['path'] . '？' . $params;
+            $data['path'] = stripos($data['path'], '?') !== false ? $data['path'] . '&' . $params : $data['path'] . '?' . $params;
             $result = model('ChannelActive')->save($data);
             if ($result) {
                 $this->success('新增成功', 'admin/mini/channel');

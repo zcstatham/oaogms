@@ -19,7 +19,7 @@ Route::domain('api',function() {
     Route::rule('log/lg','api/index/login');
     Route::rule('log/ah','api/index/authed');
     Route::rule('log/ad','api/index/browsead');
-})->method('post');
+});
 
 
 Route::domain('admin',array(
