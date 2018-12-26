@@ -6,6 +6,7 @@
  * Time: 12:20
  */
 return [
+    'uploads_dir'   => Env::get('root_path') . 'public/uploads/wxacode/',
     'mini_salt'   => 'oaogms',
     'm_param_salt'   => 'oaogmsmid',
     's_param_salt'   => 'oaogmssid',

@@ -18,4 +18,5 @@ return [
 
         '4001' => '数据库连接失败，请重试',
     ),
+    'user_secret'=>'ksjKDdfsd9'
 ];

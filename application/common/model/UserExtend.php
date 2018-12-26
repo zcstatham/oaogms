@@ -11,5 +11,6 @@ namespace app\common\model;
 
 class UserExtend
 {
+    protected $updateTime = 'last_login_timestamp';
 
 }

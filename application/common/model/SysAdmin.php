@@ -140,8 +140,7 @@ class SysAdmin extends Base
         if (isset($user->sid) && $user->sid && $user->status && md5($password . $user->salt) === $user->password) {
 
             $user->save([
-                'login_times' => array('inc', 'login_times', 1),
-                'last_login_ip' => get_client_ip()
+                'login' => array('inc', 'login', 1),
             ],['sid' => $user->sid]);
 
             /* 记录登录SESSION和COOKIES */
@@ -149,7 +148,6 @@ class SysAdmin extends Base
                 'sid' => $user->sid,
                 'nickname' => $user->nickname,
                 'avator' => $user->avator,
-                'last_login_timestamp' => $user->last_login_timestamp,
             );
             session('user_auth', $auth);
             session('user_auth_sign', data_auth_sign($auth));

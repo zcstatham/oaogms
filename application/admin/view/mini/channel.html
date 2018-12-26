@@ -43,8 +43,9 @@
                     <td>{$item.sname}</td>
                     <td>{$item.mname}</td>
                     <td class=""><span>{$item.path}</span>
-                        <a rel="nofollow" href="#" class="text-itemcopy-item d-inline-block ml-2">复制</a></td>
+                        <a rel="nofollow" href="#" class="copy-item text-itemcopy-item d-inline-block ml-2">复制</a></td>
                     <td class="">
+                        <a href="{:url('admin/mini/getWXAQRCode', array('id'=>$item['id']))}" class="btn-link blue">小程序码</a>
                         <a href="{:url('admin/mini/delActive', array('id'=>$item['id']))}" class="btn-link blue">删除</a>
                     </td>
                 </tr>

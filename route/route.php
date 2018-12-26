@@ -23,24 +23,24 @@ Route::domain('api',function() {
 
 
 Route::domain('admin',array(
-        '/'               => 'admin/index/index',
-        '/clear'               => 'admin/index/clear',
+    '/'               => 'admin/index/index',
+    '/clear'          => 'admin/index/clear',
 
-        'publice/index'   => 'admin/publice/index',
-        'publice/own'     => 'admin/publice/own',
-        'publice/channel' => 'admin/publice/channel',
+    'publice/index'   => 'admin/publice/index',
+    'publice/own'     => 'admin/publice/own',
+    'publice/channel' => 'admin/publice/channel',
 
-        'mini/index'   => 'admin/mini/index',
-        'mini/own'     => 'admin/mini/own',
-        'mini/channel' => 'admin/mini/channel',
+    'mini/index'   => 'admin/mini/index',
+    'mini/own'     => 'admin/mini/own',
+    'mini/channel' => 'admin/mini/channel',
 
-        'system/index' => 'admin/user/index',
-        'system/group' => 'admin/group/index',
-        'system/auth' => 'admin/group/access',
+    'system/index' => 'admin/user/index',
+    'system/group' => 'admin/group/index',
+    'system/auth' => 'admin/group/access',
 
-        '/login'   => 'admin/index/login',
-        '/logout'     => 'admin/index/logout',
-    ));
+    '/login'   => 'admin/index/login',
+    '/logout'     => 'admin/index/logout',
+));
 
 //return [
 //    '__pattern__' => [

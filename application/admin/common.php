@@ -62,13 +62,14 @@ function getDateMap($str){
             $dateMap = ['create_timestamp','between',[date('Y-m-d',strtotime("-30 day")),date('Y-m-d',time())]];
             break;
         case 'today':
-            $dateMap = ['create_timestamp','between',[date('Y-m-d 00:00:00',time()),date('Y-m-d H:m:s',time())]];
+            $dateMap = ['create_timestamp','between',[date('Y-m-d 00:00:00',time()),date('Y-m-d 00:00:00',strtotime("+1 day"))]];
             $timeFormat = '%H:00:00';
             break;
         default:
             $date = implode('|',$str);
             $dateMap = ['create_timestamp','between',$date];
     }
+    \think\facade\Log::write(time());
     return array($dateMap, $timeFormat);
 }
 

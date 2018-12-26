@@ -215,11 +215,13 @@
         display: -ms-inline-flexbox;
         display: inline-flex;
     }
+
     .selectgroup-item {
         -ms-flex-positive: 1;
         flex-grow: 1;
         position: relative;
     }
+
     .selectgroup-input {
         opacity: 0;
         position: absolute;
@@ -227,16 +229,19 @@
         top: 0;
         left: 0;
     }
+
     .selectgroup-input:checked + .selectgroup-button {
         border-color: #467fcf;
         z-index: 1;
         color: #467fcf;
         background: #edf2fa;
     }
+
     .selectgroup-item:not(:last-child) .selectgroup-button {
         border-top-right-radius: 0;
         border-bottom-right-radius: 0;
     }
+
     .selectgroup-button {
         display: block;
         border: 1px solid rgba(0, 40, 100, 0.12);
@@ -254,6 +259,10 @@
         line-height: 1.5;
         min-width: 2.375rem;
     }
+
+    small.ml-2 {
+        color: #999;
+    }
 </style>
 {/block}
 {block name="body"}
@@ -261,10 +270,11 @@
     <!-- 表格统计 -->
     <div class="" id="report1">
         <div class="invoice-title d-flex justify-content-between">
-            <h5 class="h5">今日概况</h5>
-            <select class="custom-select mb-2 mr-sm-2 mb-sm-0" name="mini" id="mini" >
+            <h5 class="h5">今日概况<small class="ml-2">下次刷新：<span id="countdown"></span></small></h5>
+            <select class="custom-select mb-2 mr-sm-2 mb-sm-0" name="mini" id="mini">
                 {volist name="minis" id="item"}
-                <option value="{$item.id}" {if ($item.id eq $Request.get.id) or ($key==0)}selected{/if}>{$item.name}</option>
+                <option value="{$item.id}" {if ($item.id eq $Request.get.id) or ($key==0)}selected{/if}>{$item.name}
+                </option>
                 {/volist}
             </select>
         </div>
@@ -279,13 +289,21 @@
                             <h4 class="font-light m-b-0"><i class="ti-arrow-up text-success"></i>{$card['total']}</h4>
                             <span class="text-muted">{$card['title']|default=""}</span>
                         </div>
-                        <p class="border-bottom-red d-flex justify-content-between mb-1"><small>渠道用户</small><small class="text-success">{$card['channel']}</small></p>
+                        <p class="border-bottom-red d-flex justify-content-between mb-1">
+                            <small>渠道用户</small>
+                            <small class="text-success">{$card['channel']}</small>
+                        </p>
                         <div class="progress">
-                            <div class="progress-bar bg-success" role="progressbar" style="width:{$card['total']==0?0:($card['channel']/$card['total']*100)}%; height: 6px;"></div>
+                            <div class="progress-bar bg-success" role="progressbar"
+                                 style="width:{$card['total']==0?0:($card['channel']/$card['total']*100)}%; height: 6px;"></div>
                         </div>
-                        <p class="border-bottom-greep d-flex justify-content-between mb-1"><small>平台用户</small><small class="text-success">{$card['oao']}</small></p>
+                        <p class="border-bottom-greep d-flex justify-content-between mb-1">
+                            <small>平台用户</small>
+                            <small class="text-success">{$card['oao']}</small>
+                        </p>
                         <div class="progress">
-                            <div class="progress-bar bg-success" role="progressbar" style="width: {$card['total']==0?0:($card['channel']/$card['total']*100)}%; height: 6px;"></div>
+                            <div class="progress-bar bg-success" role="progressbar"
+                                 style="width: {$card['total']==0?0:($card['channel']/$card['total']*100)}%; height: 6px;"></div>
                         </div>
                     </div>
                 </div>
@@ -324,7 +342,7 @@
                         <canvas class="ct-chart" id="login" height="200"></canvas>
                     </div>
                     <div class="card-content">
-                        <h4 class="title">新增访问</h4>
+                        <h4 class="title">访问量</h4>
                     </div>
                 </div>
             </div>
@@ -334,7 +352,7 @@
                         <canvas class="ct-chart" id="register" height="200"></canvas>
                     </div>
                     <div class="card-content">
-                        <h4 class="title">新增用户</h4>
+                        <h4 class="title">用户量</h4>
                     </div>
                 </div>
             </div>
@@ -344,7 +362,7 @@
                         <canvas class="ct-chart" id="auth" height="100"></canvas>
                     </div>
                     <div class="card-content">
-                        <h4 class="title">新增授权</h4>
+                        <h4 class="title">授权量</h4>
                     </div>
                 </div>
             </div>
@@ -354,7 +372,7 @@
                         <canvas class="ct-chart" id="browseAd" height="100"></canvas>
                     </div>
                     <div class="card-content">
-                        <h4 class="title">广告浏览次数</h4>
+                        <h4 class="title">广告浏览量</h4>
                     </div>
                 </div>
             </div>
@@ -365,7 +383,7 @@
 {block name="script"}
 <!--Core Javascript -->
 <script>
-    $(function(){
+    $(function () {
         var chartbox = {
             'login': document.getElementById("login").getContext('2d'),
             'register': document.getElementById("register").getContext('2d'),
@@ -409,57 +427,115 @@
             }
         };
 
-        getCharts({id:1});
-        $('.selectgroup-button').on('click',function(e){
-            var id = $('#mini').val();
+        var chartlists = [];
+        var timer=null;
+        var $mini = $('#mini'),
+            $datebtn = $('.selectgroup-button'),
+            $dategroup = $('dategroup'),
+            $cards = $('#cards'),
+            $countdown = $('#countdown');
+
+        var currentId = $mini.val();
+        var currentDate = $dategroup.val();
+        getCharts({id: currentId, granularity: currentDate});
+        getCards(currentId);
+
+        $datebtn.on('click', function (e) {
+            var id = $mini.val();
             var date = $(this).prev('input').val();
             var data = {
-                id: id?id:1,
-                date:date
-            }
+                id: id ? id : 1,
+                granularity: date
+            };
             getCharts(data);
-        })
-        $('#mini').change(function(){
-            var id = $(this).val();
-            getCards(id);
-            getCharts({id:id});
         });
-        
-        function getCharts(data){
-            $.getJSON("{:url('admin/publice/chart')}",data,function(charts){
-                $.each(charts,function (index,chart){
-                    config.data= chart;
-                    new Chart(chartbox[index], $.extend({},config))
+        $mini.change(function () {
+            currentId = $(this).val();
+            getCards(currentId);
+            getCharts({id: currentId, granularity: currentDate});
+        });
+
+        setInterval(function () {
+            getCards(currentId);
+            getCharts({id: currentId, granularity: currentDate});
+        }, 1000 * 60 * 2);
+
+        resetTime();
+        function resetTime(){
+            var t = 60 * 2;
+            var m = 0;
+            var s = 0;
+            m = Math.floor(t / 60 % 60);
+            m < 10 && (m = '0' + m);
+            s = Math.floor(t % 60);
+            function countDown(){
+                s--;
+                s<10&&(s='0'+s);
+                if(s.length>=3){
+                    s=59;
+                    m="0"+(Number(m)-1);
+                }
+                if(m.length>=3){
+                    m='00';
+                    s='00';
+                    clearInterval(timer);
+                    Promise.all([getCards(currentId),getCharts({id: currentId, granularity: currentDate})]).then(function(){
+                        m = Math.floor(t / 60 % 60);
+                        s = 0;
+                        timer=setInterval(countDown,1000);
+                    });
+                }
+                $countdown.html(m+':'+s);
+            }
+            timer=setInterval(countDown,1000);
+        }
+
+        function getCharts(data) {
+            return new Promise(function(resolve, reject){
+                $.getJSON("{:url('admin/publice/chart')}", data, function (charts) {
+                    $.each(charts, function (index, chart) {
+                        config.data = chart;
+                        if (!chartlists[index]) {
+                            chartlists[index] = new Chart(chartbox[index], $.extend({}, config))
+                        } else {
+                            chartlists[index].data = chart;
+                            chartlists[index].update();
+                        }
+                    });
+                    resolve('200 OK');
                 });
             });
         }
-        
-        function getCards(id){
-            $.getJSON("{:url('admin/publice/card')}",{id:id},function(carts){
-                var html='';
-                $.each(carts,function (index,cart){
-                    html += '<div class="col-sm-3">' +
-                        '    <div class="card">' +
-                        '        <div class="card-status bg-orange"></div>' +
-                        '        <div class="card-block">' +
-                        '            <div class="text-left report1-cont d-flex justify-content-between">' +
-                        '                <h4 class="font-light m-b-0"><i class="ti-arrow-up text-success"></i>'+card['total']+'</h4>' +
-                        '                <span class="text-muted">'+card['title']+'</span>' +
-                        '            </div>' +
-                        '            <p class="border-bottom-red d-flex justify-content-between mb-1"><small>渠道用户</small><small class="text-success">'+card['channel']+'</small></p>' +
-                        '            <div class="progress">' +
-                        '                <div class="progress-bar bg-success" role="progressbar" ' +
-                        '                   style="width:'+ (card['total']==0?0:(card['channel']/card['total']*100))+'%; height: 6px;"></div>' +
-                        '            </div>' +
-                        '            <p class="border-bottom-greep d-flex justify-content-between mb-1"><small>平台用户</small><small class="text-success">'+card['oao']+'</small></p>' +
-                        '            <div class="progress">' +
-                        '                <div class="progress-bar bg-success" role="progressbar" style="width: '+ (card['total']==0?0:(card['channel']/card['total']*100))+'%; height: 6px;"></div>' +
-                        '            </div>' +
-                        '        </div>' +
-                        '    </div>' +
-                        '</div>';
+
+        function getCards(id) {
+            return new Promise(function(resolve, reject){
+                $.getJSON("{:url('admin/publice/card')}", {id: id}, function (cards) {
+                    var html = '';
+                    $.each(cards, function (index, card) {
+                        html += '<div class="col-sm-3">' +
+                            '    <div class="card">' +
+                            '        <div class="card-status bg-orange"></div>' +
+                            '        <div class="card-block">' +
+                            '            <div class="text-left report1-cont d-flex justify-content-between">' +
+                            '                <h4 class="font-light m-b-0"><i class="ti-arrow-up text-success"></i>' + card['total'] + '</h4>' +
+                            '                <span class="text-muted">' + card['title'] + '</span>' +
+                            '            </div>' +
+                            '            <p class="border-bottom-red d-flex justify-content-between mb-1"><small>渠道用户</small><small class="text-success">' + card['channel'] + '</small></p>' +
+                            '            <div class="progress">' +
+                            '                <div class="progress-bar bg-success" role="progressbar" ' +
+                            '                   style="width:' + (card['total'] == 0 ? 0 : (card['channel'] / card['total'] * 100)) + '%; height: 6px;"></div>' +
+                            '            </div>' +
+                            '            <p class="border-bottom-greep d-flex justify-content-between mb-1"><small>平台用户</small><small class="text-success">' + card['oao'] + '</small></p>' +
+                            '            <div class="progress">' +
+                            '                <div class="progress-bar bg-success" role="progressbar" style="width: ' + (card['total'] == 0 ? 0 : (card['oao'] / card['total'] * 100)) + '%; height: 6px;"></div>' +
+                            '            </div>' +
+                            '        </div>' +
+                            '    </div>' +
+                            '</div>';
+                    });
+                    $cards.html(html);
+                    resolve('200 OK');
                 });
-                $('#card').html(html);
             });
         }
     });

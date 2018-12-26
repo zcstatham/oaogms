@@ -8,14 +8,27 @@
 namespace app\common\model;
 
 
+use think\Db;
+use think\facade\Log;
+
 class User extends Base {
 
-    protected $scret = 'ksjKDdfsd9';
+    protected $pk = 'uid';
+    protected $updateTime = 'last_login_timestamp';
 
     public function user_extend()
     {
         return $this->hasMany('UserExtend');
     }
+
+    protected function getIdAttr($value, $data){
+        return $data['uid'];
+    }
+
+    protected function setIdAttr($value, $data){
+        return $data['id'];
+    }
+
     /**
      * 获取小程序用户统计信息
      * @return array('累计用户'，'新增用户'，'渠道用户')
@@ -31,9 +44,8 @@ class User extends Base {
         ];
     }
 
-    public function login($token){
-        $uid = decrypt($token,$this->scret);
-        if($uid =='' || !$this->where('uid',$uid)->find('uid')){
+    public function login($uid){
+        if(!$this->where('uid',$uid)->find()){
             return false;
         }
         $result = $this->save(array(
@@ -45,55 +57,82 @@ class User extends Base {
         return true;
     }
 
-//    public function login($code,$uInfo,$mInfo,$now){
-//        $wx = new \wx\wxLogin($mInfo['appid'],$mInfo['appSecret']);
-//        $wxInfo = $wx->wxLogin($code);
-//        if($wxInfo['errcode ']!=0){
-//            return $wxInfo['errcode '];
-//        }
-//        try{
-//            $uid = $this->where('u_openid',$wxInfo['openid'])->find('u_id');
-//        }catch (\think\Exception\DbException $e){
-//            return -1;
-//        }
-//        if($uid){
-//            $this->save(array(
-//                'u_last_login_ip'=>$uInfo['ip'],
-//                'u_last_login_timestamp'=>$now
-//            ),['u_id' => $uid]);
-//            return $uid;
-//        }else {
-//            $uInfo['openid'] = $wxInfo['openid'];
-//            $uInfo['mid'] = $mInfo['m_id'];
-//            return $this->register($uInfo,$now);
-//        }
-//    }
-
-    public function register($mid,$code){
+    public function register($aid,$mid,$code){
         $mInfo = model('Mini')->get($mid);
-        $wx = new \wx\wxLogin($mInfo['appid'],$mInfo['appsecret']);
-        $wxInfo = $wx->wxLogin($code);
-        if($wxInfo['errcode'] && $wxInfo['errcode']!=0){
-            return $wxInfo['errcode'];
+        Log::write(['miniInfo'=>$mInfo->toArray()]);
+        $wx = new \com\WxApi($mInfo['appid']);
+        $wxInfo = $wx->wxLogin($code,$mInfo['appsecret']);
+        Log::write(['wxInfo'=>$wxInfo]);
+        if(isset($wxInfo['errcode']) && $wxInfo['errcode']!=0){
+            return false;
         }
-        $uid = $this->where('openid',$wxInfo['openid'])->find('uid');
-        if(!$uid) {
-            $user = new User;
-            $user->nickname = $wxInfo['nickname'];
-            $user->openid = $wxInfo['avatarUrl'];
-            $user->sex = $wxInfo['gender'];
-            $user->reg_ip = get_client_ip();
-            $user->last_login_ip = get_client_ip();
-            $user->save();
-            $user->user_extend()->save(array(
-                'uid' => $user->uid,
-                'mid' => $mid,
-                'reg_ip' => $user->reg_ip,
-                'last_login_ip' => $user->reg_ip,
-            ));
-            return true;
+        $uinfo = $this->field('uid')->where('openid',$wxInfo['openid'])->find();
+        if(!$uinfo['uid']){
+            $now = date('Y-m-d H:m:s', time());
+            Db::startTrans();
+            try {
+                $uid = db('user')->insertGetId([
+                    'openid' => $wxInfo['openid'],
+                    'reg_ip' => get_client_ip(),
+                    'last_login_ip' => get_client_ip(),
+                    'last_login_timestamp' => $now,
+                    'create_timestamp' => $now
+                ]);
+                db('user_extend')->insert(array(
+                    'uid' => $uid,
+                    'mid' => $mid,
+                    'reg_ip' => get_client_ip(),
+                    'last_login_ip' => get_client_ip(),
+                    'last_login_timestamp' => $now,
+                    'create_timestamp' => $now
+                ));
+                db('mini_log')->insert(array(
+                    'type' => 'register',
+                    'uid' => $uid,
+                    'action_ip' => get_client_ip(),
+                    'aid' => $aid,
+                    'mid' => $mid,
+                    'create_timestamp' => $now
+                ));
+                Log::write('startTrans');
+                Db::commit();
+                Log::write('commit');
+            } catch (\Exception $e) {
+                // 回滚事务
+                Db::rollback();
+                Log::write('rollback');
+                return false;
+            }
         }
-        return $uid;
+//        session('user_'.$user['uid'].'_session_key',$wxInfo);
+        return $uinfo['uid'];
+    }
+
+    public function setUserInfo($info){
+        $emap = [
+            'uid'=>$info['id'],
+            'mid'=>$info['mid'],
+        ];
+        $sinfo = db('user_extend')->field('status')->where($emap)->find();
+        Log::write(['info'=>$info,'sql'=>$this->getLastSql(),'status'=>$sinfo['status'],'emap'=>$emap]);
+        $data = array(
+            'nickname'=>$info['userinfo']['nickName'],
+            'avator'=>$info['userinfo']['avatarUrl'],
+            'sex'=>$info['userinfo']['gender'],
+        );
+        db('user')
+            ->data($data)
+            ->where('uid',$info['id'])
+            ->update();
+        if((int)$sinfo['status'] != 1) {
+            db('user_extend')
+                ->data(['status'=>1])
+                ->where($emap)
+                ->update();
+            return 'newAuth';
+        }else{
+            return 'updata';
+        }
     }
 
     public function updataLog($mid,$uid,$ip,$now){

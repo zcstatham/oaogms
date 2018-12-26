@@ -8,6 +8,7 @@
 
 namespace app\admin\controller;
 use think\Db;
+use think\facade\Log;
 
 /**
  * Class Publice
@@ -22,7 +23,7 @@ class Publice extends Base
      * @return mixed
      */
     public function index($id = 1){
-        $list = model('Mini')->field('mid,name')->all();
+        $list = model('Mini')->field('mid,name')->where('status','=',1)->all();
         $map[] = ['create_timestamp','>=',date('Y-m-d 00:00:00',time())];
         $map[] = ['mid','=',$id];
         $data = array(
@@ -55,8 +56,11 @@ class Publice extends Base
 
     public function getChannelData($id = 1,$granularity='today'){
         $dateformat = getDateMap($granularity);
+        $sid = session('user_auth.sid');
+        $map[] = $sid>10 ?['SysAdmin.sid','=',$sid]:['SysAdmin.sid','>',10];
         $list = Db::view('SysAdmin','sid,nickname')
-            ->view('ChannelActive','aid,mid,name','SysAdmin.sid=ChannelActive.sid')->select();
+            ->view('ChannelActive','aid,mid,name','SysAdmin.sid=ChannelActive.sid')
+            ->where($map)->select();
         foreach ($list as &$item){
             $pmap = array(
                 $dateformat[0],
@@ -107,8 +111,11 @@ class Publice extends Base
         return json($data);
     }
 
-    public function card($id){
-        $data = profile($id);
+    public function card($id,$granularity='today'){
+        $dateformat = getDateMap($granularity);
+        $map[] = $dateformat[0];
+        $map[]=['mid','=',$id];
+        $data = profile($map);
         return json($data);
     }
 
@@ -117,6 +124,9 @@ class Publice extends Base
         $timeFormat = $dateformat[1];
         $map[] = ['mid','=',$id];
         $map[] = $dateformat[0];
+        $subsqlmap[] = ['mid','=',$id];
+        $calendarmap = $dateformat[0];
+        $calendarmap[0]='date';
         $field = ['aid',
             'type', 'remark',
             'IFNULL(COUNT(*),0)' => 'count',
@@ -124,7 +134,7 @@ class Publice extends Base
         $group =  'aid,type,date';
         $charts = config('siteinfo.charts');
         foreach ($charts as $chartname=>$chartlabel) {
-            if($dateType == 'today'){
+            if($dateType == 'today' || $dateType == 'yesterday'){
                 for($i = 0; $i < 24; $i++){
                     $d = str_pad($i,2,"0",STR_PAD_LEFT);
                     $union[]= "SELECT 0,'$chartname','',0,'$d:00:00'";
@@ -137,19 +147,17 @@ class Publice extends Base
                     ->group($group)
                     ->union($union)
                     ->buildSql();
-                $$chartname = Db::query('SELECT * FROM'.$subsql.'AS d GROUP BY d.date,d.aid');
+                $$chartname = Db::query('SELECT * FROM'.$subsql.'AS d GROUP BY d.date,d.aid ORDER BY d.date');
             }else {
                 $subsql  = db('mini_log')
-                    ->where($map)
+                    ->where($subsqlmap)
                     ->where('type',$chartname)
                     ->field($field)
                     ->group($group)
                     ->buildSql();
-                $$chartname = db('calendar')
-                    ->field('b.sid,b.remark,IFNULL(b.count,0) as count,a.date')
-                    ->alias('a')
-                    ->join([$subsql=> 'b'], 'a.date = b.date')
-                    ->select();
+                $calendar = db('calendar')->where([$calendarmap])->buildSql();
+                Log::write([$calendar,$subsql]);
+                $$chartname = Db::query('SELECT IFNULL(s.aid,0) as aid,IFNULL(s.remark,\'\') as remark,IFNULL(s.count,0) as count,c.date FROM'.$calendar.'AS c LEFT JOIN'.$subsql.'AS s on s.date=c.date GROUP BY s.date,s.aid ORDER BY s.date');
             }
 
             $data[$chartname] = $this->formChart($$chartname);

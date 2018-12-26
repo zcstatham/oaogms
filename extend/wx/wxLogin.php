@@ -13,6 +13,7 @@ class wxLogin
     protected $appid;
     protected $appSecret;
     protected $wxhost = 'https://api.weixin.qq.com/sns/';
+
     public function __construct($appid,$appSecret){
         $this->appid = $appid;
         $this->appSecret = $appSecret;

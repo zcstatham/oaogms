@@ -295,3 +295,20 @@ function decodeN($tex)
     }
     return $reslutstr;
 }
+
+function saveImgage($filename,$imageData){
+    $src = $filename;
+    $img = @file_put_contents($src,$imageData);
+    if($img){
+        return $src;
+    }else{
+        return false;
+    }
+}
+
+function mkdirs($dir, $mode = 0777)
+{
+    if (is_dir($dir) || @mkdir($dir, $mode)) return TRUE;
+    if (!mkdirs(dirname($dir), $mode)) return FALSE;
+    return @mkdir($dir, $mode);
+}

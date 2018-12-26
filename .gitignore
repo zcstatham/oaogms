@@ -1,8 +1,0 @@
-/.idea
-/.vscode
-/vendor
-/runtime
-*.log
-thinkphp
-.env
-.DS_Store

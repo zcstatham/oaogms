@@ -10,6 +10,7 @@ namespace app\admin\controller;
 
 use app\common\model\ChannelActive;
 use think\Db;
+use think\facade\Log;
 
 /**
  * Class Mini
@@ -36,7 +37,7 @@ class Mini extends Base
      */
     public function index()
     {
-        $list = $this->model->order('mid')
+        $list = $this->model->order('mid')->where('status',1)
             ->paginate(config('siteinfo.list_rows'), false);
         $data = array(
             'group' => $this->miniGroup,
@@ -170,21 +171,37 @@ class Mini extends Base
         if (empty($id)) {
             $this->error('请选择要操作的数据!');
         }
-        if ($this->model->where('mid', $id)->delete()) {
+        if ($this->model->save(['status'=>0],['mid'=>$id])) {
             $this->success('删除成功');
         } else {
             $this->error('删除失败！');
         }
     }
 
+    /**
+     * @title 添加推广活动
+     * @return bool|mixed
+     */
     public function addActive()
     {
         if ($this->request->isPost()) {
+            $channelActive = model('ChannelActive');
             $data = $this->request->param();
-            $params = getSurveyParam($data['mid'], $data['sid']);
-            $data['path'] = $data['path'] ?: 'pages/index/index';
-            $data['path'] = stripos($data['path'], '?') !== false ? $data['path'] . '&' . $params : $data['path'] . '?' . $params;
-            $result = model('ChannelActive')->save($data);
+            Db::startTrans();
+            try {
+                $channelActive->save($data);
+                $aid = $channelActive->getLastInsID();
+                $params = getSurveyParam($data['mid'], $aid);
+                $path = $data['path'] ?: 'pages/index/index';
+                $path= stripos($path, '?') !== false ? $path . '&' . $params : $path . '?' . $params;
+                $result = model('ChannelActive')->save(['path'=>$path],['aid'=>$aid]);
+                Db::commit();
+            } catch (\Exception $e) {
+                // 回滚事务
+                Db::rollback();
+                Log::write('addActive rollback');
+                return $e;
+            }
             if ($result) {
                 $this->success('新增成功', 'admin/mini/channel');
             } else {
@@ -201,6 +218,11 @@ class Mini extends Base
         return false;
     }
 
+    /**
+     * @title 删除推广活动
+     * @param $id
+     * @throws \Exception
+     */
     public function delActive($id)
     {
         if (empty($id)) {
@@ -213,8 +235,19 @@ class Mini extends Base
         }
     }
 
+    public function getWXAQRCode($id)
+    {
+        $dir = config('siteinfo.uploads_dir');
+        mkdirs(config('siteinfo.uploads_dir'));
+        $filename =  md5('wxacode' . $id) . '.jpg';
+        if (!@getimagesize($dir.$filename)) {
+            $this->createWXAQRCode($id, $dir.$filename);
+        }
+        return download('./uploads/wxacode/'.$filename,'wxcode')->mimeType('image/jpeg');
+    }
+
     /**
-     * @title 绑定小程序
+     *  绑定小程序
      * @param $id
      * @param $status
      * @return bool
@@ -230,7 +263,7 @@ class Mini extends Base
     }
 
     /**
-     * @title 申请绑定小程序
+     * 申请绑定小程序
      * @param $id
      * @return bool
      */
@@ -251,7 +284,7 @@ class Mini extends Base
 
 
     /**
-     * @title 小程序详细信息
+     *  小程序详细信息
      * @return bool
      */
     public function moreInfo($id)
@@ -294,5 +327,22 @@ class Mini extends Base
         $this->setMeta('小程序详细信息');
         $this->assign($data);
         return $this->fetch();
+    }
+
+    /**
+     * 生成小程序码
+     * @param $filename
+     */
+    private function createWXAQRCode($id, $filename)
+    {
+        $channelActive = model('ChannelActive')->where('aid', $id)->field('mid,path')->find();
+        $mini = model('mini')->where('mid', '=', $channelActive['mid'])->field('appid,appsecret')->find();
+        $data = array(
+            'path'=>$channelActive['path'],
+            'width'=>512,
+        );
+        $wx = new \com\WxApi($mini['appid']);
+        $data = $wx->createWXAQRCode($mini['appsecret'], $data,'a');
+        saveImgage($filename,$data );
     }
 }

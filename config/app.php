@@ -15,13 +15,13 @@
 
 return [
     // 应用名称
-    'app_name'               => '',
+    'app_name'               => 'oaogms',
     // 应用地址
-    'app_host'               => '',
+    'app_host'               => 'oaogms.blockhuaxia.com',
     // 应用调试模式
     'app_debug'              => true,
     // 应用Trace
-    'app_trace'              => false,
+    'app_trace'              => true,
     // 是否支持多模块
     'app_multi_module'       => true,
     // 入口自动绑定模块

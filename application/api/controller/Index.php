@@ -20,11 +20,12 @@ class Index extends controller
     ];
 
     protected $mid;
-    protected $sid;
+    protected $aid;
+    protected $uid;
 
     private $data = [
-        'code'=> 1,
-        'data'=> null
+        'code' => 1,
+        'data' => null
     ];
 
     function index()
@@ -33,66 +34,119 @@ class Index extends controller
     }
 
     //访问接口
-    public function login(){
-        Log::record($this->request);
-        if(model('User')->login($this->request->param('token'))){
-            $this->data['token'] = $_POST['token'];
-            if(!$this->log('login')){
-                $this->data['code']=0;
+    public function login()
+    {
+        $code = $this->request->post('code');
+        if (!empty($this->uid)) {
+            model('User')->login($this->uid);
+            if (!$this->log('login')) {
+                $this->data['code'] = 0; //日志写入失败
+                $this->data['data'] = 'error,try again later';
+            }else {
+                $this->data['code'] = 1; //登录成功
+                $this->data['data'] = 'login success';
             }
-            return json($this->data);
         }
-        $this->data['code']=-1;
+        if(!$this->uid && isset($code)){
+            $uid = model('User')->register($this->aid,$this->mid, $code);
+            if ($uid === false ) {
+                $this->data['code'] = 0; //日志写入失败
+                $this->data['data'] = 'error,try again later';
+            }else {
+                $this->data['code'] = 2; //注册成功
+                $this->data['data'] = encrypt((string)$uid, config('siteinfo.user_secret'));
+            }
+        } else {
+            $this->data['code'] = -1; //日志写入失败
+            $this->data['data'] = 'error,request must have params \'code\'';
+        }
+        Log::record(['return'=>$this->data]);
         return json($this->data);
     }
 
     //授权接口
-    public function authed(){
-        $uid = model('User')->register($this->mid,$this->request->post('code'));
-        if($uid === true ) {
-            if(!$this->log('register')){
-                $this->data['code']=0;
-                return json($this->data);
-            }
-            return json($this->data);
-        }else{
-            $_POST['token'] = encrypt($uid,model('User')->scret);
-            $this->login();
-        }
-    }
-
-    //看广告
-    public function browsead(){
-        if(model('User')->login($this->request->post('token'))){
-            if(!$this->log('browseAd')){
-                $this->data['code']=0;
-                return json($this->data);
-            }
+    public function authed()
+    {
+        $info = $this->request->param();
+        if(!isset($this->uid) || empty($this->uid) || !is_numeric($this->uid)) {
+            $this->data['code'] = -1;
+            $this->data['data'] = 'error,request must have params \'code\'';
             return json($this->data);
         }
-        $this->data['code']=-1;
+        Log::write(['request' => $info]);
+        $info['id'] = $this->uid;
+        $info['mid'] = $this->mid;
+        $mode = model('User')->setUserInfo($info);
+        if ($mode === 'newAuth') {
+            if (!$this->log('auth')) {
+                $this->data['code'] = 0;
+                $this->data['data'] = 'error,try again later';
+                return json($this->data);
+            }else {
+                $this->data['data'] = 'addAuth success';
+            }
+        }else {
+            $this->data['code'] = 2;
+            $this->data['data'] = 'updata success';
+        }
+        Log::write(['return'=>$this->data]);
         return json($this->data);
     }
 
-    public function log($type){
+    //看广告
+    public function browsead()
+    {
+        if (!empty($this->uid) && model('User')->login($this->uid)) {
+            if (!$this->log('browseAd')) {
+                $this->data['code'] = 0;
+                $this->data['data'] = 'error,try again later';
+            }else{
+                $this->data['data'] = 'browsead success';
+            }
+        }else {
+            $this->data['code'] = -1;
+            $this->data['data'] = 'error,no user';
+        }
+        Log::record(['return'=>$this->data]);
+        return json($this->data);
+    }
+
+    public function log($type)
+    {
         $data = array(
             'type' => $type,
-            'uid' => model('User')->register(),
+            'uid' => $this->uid,
             'action_ip' => get_client_ip(),
             'aid' => $this->aid,
             'mid' => $this->mid
         );
-        Log::record($data);
+        Log::record(['log'=>$data]);
         return model('MiniLog')->save($data);
     }
 
-    protected function checkDate(){
-        $this->mid = decodeN($this->request->param('oao_media_id'));
+    protected function checkDate()
+    {
+        $mid = $this->request->param('oao_media_id');
         $aid = $this->request->param('oao_link_key');
-        $this->aid = $aid?decodeN($aid):0;
-        trace(['参数检测',$this],'info');
-        if(!isset($this->mid)){
+        $token = $this->request->param('token');
+        if(isset($token) && !empty($token)){
+            $this->uid = decrypt($token, config('siteinfo.user_secret'));
+        }
+        if(isset($aid)){
+            $this->aid = decodeN($aid);
+        }else {
+            $this->aid = 0;
+        }
+        if (isset($mid)&& !empty($mid)) {
+            $this->mid = decodeN($mid);
+        }else {
             json_error_exception('1003');
         }
+        Log::write([
+            'request'=>$this->request->param(),
+            'uid'=>$this->uid,
+            'aid'=>$this->aid,
+            'mid'=>$this->mid,
+        ]);
     }
 }

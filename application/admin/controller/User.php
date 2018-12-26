@@ -99,7 +99,7 @@ class User extends Base
             if (!$info) {
                 $this->error('不存在此用户！');
             }
-            $this->model->keyList[1]['type'] = 'readonly';
+            $this->model->editfield[1]['type'] = 'readonly';
             $data = array(
                 'info' => $info,
                 'keyList' => $this->model->editfield,

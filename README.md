@@ -1,180 +1,233 @@
-![](https://box.kancloud.cn/5a0aaa69a5ff42657b5c4715f3d49221) 
-
-ThinkPHP 5.1（LTS版本） —— 12载初心，你值得信赖的PHP框架
+OAOGMS —— 小程序统计
 ===============
 
-[![Scrutinizer Code Quality](https://scrutinizer-ci.com/g/top-think/framework/badges/quality-score.png?b=5.1)](https://scrutinizer-ci.com/g/top-think/framework/?branch=5.1)
-[![Build Status](https://travis-ci.org/top-think/framework.svg?branch=master)](https://travis-ci.org/top-think/framework)
-[![Total Downloads](https://poser.pugx.org/topthink/framework/downloads)](https://packagist.org/packages/topthink/framework)
-[![Latest Stable Version](https://poser.pugx.org/topthink/framework/v/stable)](https://packagist.org/packages/topthink/framework)
-[![PHP Version](https://img.shields.io/badge/php-%3E%3D5.6-8892BF.svg)](http://www.php.net/)
-[![License](https://poser.pugx.org/topthink/framework/license)](https://packagist.org/packages/topthink/framework)
+## 系统环境
+> CentOS 7 + nginx 1.12 + php 7 + mysql + ThinkPHP 5.1
 
-ThinkPHP5.1对底层架构做了进一步的改进，减少依赖，其主要特性包括：
+V1.0.0
+===============
+## Admin模块
+搭建简易GMS,对小程序行为日志做统计，其主要功能包括：
 
- + 采用容器统一管理对象
- + 支持Facade
- + 注解路由支持
- + 路由跨域请求支持
- + 配置和路由目录独立
- + 取消系统常量
- + 助手函数增强
- + 类库别名机制
- + 增加条件查询
- + 改进查询机制
- + 配置采用二级
- + 依赖注入完善
- + 支持`PSR-3`日志规范
- + 中间件支持（V5.1.6+）
- + Swoole/Workerman支持（V5.1.18+）
+ + Auth权限
+ + 简易菜单
+ + 首页
+ + 报表（登录，授权，看广告）
+ 
+## API模块
+小程序行为采集接口，其主要功能包括：
 
+ + 登录
+ + 注册
+ + 日志采集
 
-> ThinkPHP5的运行环境要求PHP5.6以上。
+## 数据库结构
+~~~
+-- ----------------------------
+-- oao_auth_group
+-- ----------------------------
+DROP TABLE IF EXISTS `oao_auth_group`;
+CREATE TABLE `oao_auth_group` (
+  `id` mediumint(8) unsigned NOT NULL AUTO_INCREMENT COMMENT '用户组id,自增主键',
+  `module` varchar(20) NOT NULL DEFAULT '' COMMENT '用户组所属模块',
+  `type` varchar(10) NOT NULL DEFAULT '' COMMENT '组类型',
+  `title` char(20) NOT NULL DEFAULT '' COMMENT '用户组中文名称',
+  `description` varchar(80) NOT NULL DEFAULT '' COMMENT '描述信息',
+  `status` tinyint(1) NOT NULL DEFAULT '1' COMMENT '用户组状态：为1正常，为0禁用,-1为删除',
+  `rules` varchar(500) NOT NULL DEFAULT '' COMMENT '用户组拥有的规则id，多个规则 , 隔开',
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=12 DEFAULT CHARSET=utf8 ROW_FORMAT=DYNAMIC;
 
-## 安装
+-- ----------------------------
+-- Table structure for oao_auth_group_access
+-- ----------------------------
+DROP TABLE IF EXISTS `oao_auth_group_access`;
+CREATE TABLE `oao_auth_group_access` (
+  `uid` int(10) unsigned NOT NULL COMMENT '用户id',
+  `group_id` mediumint(8) unsigned NOT NULL COMMENT '用户组id',
+  UNIQUE KEY `uid_group_id` (`uid`,`group_id`),
+  KEY `uid` (`uid`),
+  KEY `group_id` (`group_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 ROW_FORMAT=DYNAMIC;
 
-使用composer安装
+-- ----------------------------
+-- Table structure for oao_auth_rule
+-- ----------------------------
+DROP TABLE IF EXISTS `oao_auth_rule`;
+CREATE TABLE `oao_auth_rule` (
+  `id` mediumint(8) unsigned NOT NULL AUTO_INCREMENT COMMENT '规则id,自增主键',
+  `module` varchar(20) NOT NULL COMMENT '规则所属module',
+  `type` tinyint(2) NOT NULL DEFAULT '1' COMMENT '1-url;2-主菜单',
+  `name` char(80) NOT NULL DEFAULT '' COMMENT '规则唯一英文标识',
+  `title` char(20) NOT NULL DEFAULT '' COMMENT '规则中文描述',
+  `group` char(20) NOT NULL DEFAULT '' COMMENT '权限节点分组',
+  `status` tinyint(1) NOT NULL DEFAULT '1' COMMENT '是否有效(0:无效,1:有效)',
+  `condition` varchar(300) NOT NULL DEFAULT '' COMMENT '规则附加条件',
+  PRIMARY KEY (`id`),
+  KEY `module` (`module`,`name`,`status`,`type`)
+) ENGINE=InnoDB AUTO_INCREMENT=40 DEFAULT CHARSET=utf8 ROW_FORMAT=DYNAMIC;
+
+-- ----------------------------
+-- Table structure for oao_calendar
+-- 日志辅表，用于生成连续日志
+-- ----------------------------
+DROP TABLE IF EXISTS `oao_calendar`;
+CREATE TABLE `oao_calendar` (
+  `date` date NOT NULL,
+  UNIQUE KEY `unique_date` (`date`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+-- ----------------------------
+-- Table structure for oao_channel_active
+-- ----------------------------
+DROP TABLE IF EXISTS `oao_channel_active`;
+CREATE TABLE `oao_channel_active` (
+  `aid` int(11) unsigned NOT NULL AUTO_INCREMENT COMMENT '主键',
+  `name` char(30) NOT NULL DEFAULT 'test' COMMENT '活动名称',
+  `mid` int(11) NOT NULL DEFAULT '0' COMMENT '小程序id',
+  `sid` int(11) NOT NULL DEFAULT '0' COMMENT '渠道id',
+  `path` char(80) NOT NULL DEFAULT 'pages/index/index' COMMENT '监控链接 mid + sid',
+  `remark` char(200) DEFAULT NULL COMMENT '备注',
+  `create_timestamp` datetime NOT NULL COMMENT '创建时间',
+  PRIMARY KEY (`aid`),
+  KEY `sys_admin` (`sid`),
+  KEY `mini` (`mid`)
+) ENGINE=InnoDB AUTO_INCREMENT=34 DEFAULT CHARSET=utf8 ROW_FORMAT=DYNAMIC COMMENT='渠道表';
+
+-- ----------------------------
+-- Table structure for oao_menu
+-- ----------------------------
+DROP TABLE IF EXISTS `oao_menu`;
+CREATE TABLE `oao_menu` (
+  `nid` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `title` varchar(50) NOT NULL DEFAULT '' COMMENT '标题',
+  `type` varchar(10) NOT NULL DEFAULT 'admin' COMMENT '菜单类别（admin后台，user会员中心）',
+  `icon` varchar(20) NOT NULL DEFAULT '' COMMENT '分类图标',
+  `pid` int(10) unsigned NOT NULL DEFAULT '0' COMMENT '父级分类ID',
+  `sort` int(10) unsigned NOT NULL DEFAULT '0' COMMENT '排序（同级有效）',
+  `url` char(255) NOT NULL DEFAULT '' COMMENT '链接地址',
+  `hide` tinyint(1) unsigned NOT NULL DEFAULT '0' COMMENT '是否隐藏',
+  `group` varchar(50) DEFAULT '' COMMENT '分组',
+  `is_dev` tinyint(1) unsigned NOT NULL DEFAULT '0' COMMENT '是否仅开发者模式可见',
+  `status` tinyint(1) NOT NULL DEFAULT '0' COMMENT '状态',
+  PRIMARY KEY (`nid`)
+) ENGINE=InnoDB AUTO_INCREMENT=17 DEFAULT CHARSET=utf8 ROW_FORMAT=DYNAMIC COMMENT='菜单管理';
+
+-- ----------------------------
+-- Table structure for oao_mini
+-- ----------------------------
+DROP TABLE IF EXISTS `oao_mini`;
+CREATE TABLE `oao_mini` (
+  `mid` int(11) unsigned NOT NULL AUTO_INCREMENT COMMENT '主键',
+  `name` char(30) NOT NULL DEFAULT '' COMMENT '小程序名称',
+  `type` tinyint(2) unsigned NOT NULL DEFAULT '1' COMMENT '类型：1.小程序，2.小游戏',
+  `appid` char(80) NOT NULL DEFAULT '' COMMENT '小程序appid',
+  `appsecret` varchar(40) NOT NULL COMMENT 'secret',
+  `remark` char(140) NOT NULL DEFAULT '' COMMENT '小程序描述',
+  `create_timestamp` datetime NOT NULL COMMENT '创建时间',
+  `status` tinyint(4) NOT NULL DEFAULT '1' COMMENT '启用， 删除',
+  PRIMARY KEY (`mid`)
+) ENGINE=InnoDB AUTO_INCREMENT=10 DEFAULT CHARSET=utf8 ROW_FORMAT=DYNAMIC COMMENT='小程序表';
+
+-- ----------------------------
+-- Table structure for oao_mini_extend
+-- ----------------------------
+DROP TABLE IF EXISTS `oao_mini_extend`;
+CREATE TABLE `oao_mini_extend` (
+  `meid` int(11) unsigned NOT NULL AUTO_INCREMENT COMMENT 'ID',
+  `mid` int(11) unsigned NOT NULL DEFAULT '0' COMMENT '小程序ID',
+  `bindid` int(11) unsigned NOT NULL DEFAULT '0' COMMENT '绑定小程序ID',
+  `status` tinyint(4) NOT NULL DEFAULT '0' COMMENT '状态',
+  `updata_timestamp` datetime NOT NULL DEFAULT '0000-00-00 00:00:00' COMMENT '更新时间',
+  `create_timestamp` datetime NOT NULL DEFAULT '0000-00-00 00:00:00' COMMENT '创建时间',
+  PRIMARY KEY (`meid`)
+) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8;
+
+-- ----------------------------
+-- Table structure for oao_mini_log
+-- 日志大表，后期需做优化
+-- ----------------------------
+DROP TABLE IF EXISTS `oao_mini_log`;
+CREATE TABLE `oao_mini_log` (
+  `id` int(11) unsigned NOT NULL AUTO_INCREMENT COMMENT '主键',
+  `type` char(12) NOT NULL DEFAULT '' COMMENT '行为 login,toMini,browseAd,auth',
+  `uid` int(11) unsigned NOT NULL DEFAULT '0' COMMENT '执行用户id',
+  `action_ip` char(20) NOT NULL COMMENT '执行行为者ip',
+  `mid` int(11) NOT NULL DEFAULT '1',
+  `aid` int(11) unsigned DEFAULT '0' COMMENT '推广活动',
+  `remark` varchar(255) DEFAULT '' COMMENT '日志备注',
+  `create_timestamp` datetime NOT NULL COMMENT '执行行为的时间',
+  PRIMARY KEY (`id`),
+  KEY `type` (`type`),
+  KEY `create_timestamp` (`create_timestamp`),
+  KEY `uid` (`uid`),
+  KEY `aid` (`aid`)
+) ENGINE=InnoDB AUTO_INCREMENT=10 DEFAULT CHARSET=utf8 ROW_FORMAT=DYNAMIC COMMENT='行为日志表';
+
+-- ----------------------------
+-- Table structure for oao_sys_admin
+-- ----------------------------
+DROP TABLE IF EXISTS `oao_sys_admin`;
+CREATE TABLE `oao_sys_admin` (
+  `sid` int(11) unsigned NOT NULL AUTO_INCREMENT COMMENT '主键',
+  `username` varchar(32) NOT NULL DEFAULT '' COMMENT '用户名',
+  `password` varchar(64) NOT NULL DEFAULT '' COMMENT '用户密码',
+  `nickname` char(16) NOT NULL DEFAULT '' COMMENT '昵称',
+  `avator` varchar(150) NOT NULL DEFAULT '' COMMENT '头像',
+  `email` char(100) DEFAULT NULL COMMENT '邮箱地址',
+  `mobile` char(20) DEFAULT NULL COMMENT '手机号码',
+  `salt` char(8) NOT NULL DEFAULT '' COMMENT '密码盐值',
+  `login` int(11) unsigned NOT NULL DEFAULT '0' COMMENT '登录次数',
+  `status` tinyint(4) NOT NULL DEFAULT '0' COMMENT '账号状态',
+  `create_timestamp` datetime NOT NULL COMMENT '注册时间',
+  PRIMARY KEY (`sid`)
+) ENGINE=InnoDB AUTO_INCREMENT=19 DEFAULT CHARSET=utf8 ROW_FORMAT=DYNAMIC COMMENT='系统用户表';
+
+-- ----------------------------
+-- Table structure for oao_user
+-- 小程序用户表
+-- ----------------------------
+DROP TABLE IF EXISTS `oao_user`;
+CREATE TABLE `oao_user` (
+  `uid` int(11) unsigned NOT NULL AUTO_INCREMENT COMMENT '主键',
+  `nickname` varchar(32) DEFAULT '' COMMENT '昵称',
+  `avator` varchar(64) DEFAULT '' COMMENT '头像',
+  `openid` char(64) NOT NULL DEFAULT '' COMMENT 'openid',
+  `sex` tinyint(3) unsigned DEFAULT '0' COMMENT '性别',
+  `reg_ip` char(20) NOT NULL DEFAULT '0' COMMENT '注册IP',
+  `last_login_ip` char(20) NOT NULL DEFAULT '0' COMMENT '最后登录IP',
+  `last_login_timestamp` datetime NOT NULL COMMENT '最后登录时间',
+  `create_timestamp` datetime NOT NULL COMMENT '注册时间',
+  PRIMARY KEY (`uid`)
+) ENGINE=InnoDB AUTO_INCREMENT=48 DEFAULT CHARSET=utf8 ROW_FORMAT=DYNAMIC COMMENT='小游戏用户表';
+
+-- ----------------------------
+-- Table structure for oao_user_extend
+-- 小程序用户扩展
+-- ----------------------------
+DROP TABLE IF EXISTS `oao_user_extend`;
+CREATE TABLE `oao_user_extend` (
+  `eid` int(11) unsigned NOT NULL AUTO_INCREMENT,
+  `uid` int(11) NOT NULL COMMENT '用户UID',
+  `mid` int(11) NOT NULL COMMENT '小程序UID',
+  `status` tinyint(4) NOT NULL DEFAULT '0' COMMENT '状态 0 未授权 1授权',
+  `reg_ip` char(20) NOT NULL DEFAULT '0' COMMENT '注册IP',
+  `last_login_ip` char(20) NOT NULL DEFAULT '0' COMMENT '最后登录IP',
+  `last_login_timestamp` datetime NOT NULL COMMENT '最后登录时间',
+  `create_timestamp` datetime NOT NULL COMMENT '注册时间',
+  PRIMARY KEY (`eid`)
+) ENGINE=InnoDB AUTO_INCREMENT=34 DEFAULT CHARSET=utf8 ROW_FORMAT=DYNAMIC COMMENT='用户小程序关系';
 
 ~~~
-composer create-project topthink/think tp
-~~~
+## 待优化
 
-启动服务
+> 数据存储
++ 可采用 cache + redis + mysql 数据存储
++ 日志按日期拆表统计
++ 采用存储过程进行日志统计
 
-~~~
-cd tp
-php think run
-~~~
+> 定时脚本
++ 创建脚本，删除过期日志表
 
-然后就可以在浏览器中访问
-
-~~~
-http://localhost:8000
-~~~
-
-更新框架
-~~~
-composer update topthink/framework
-~~~
-
-
-## 在线手册
-
-+ [完全开发手册](https://www.kancloud.cn/manual/thinkphp5_1/content)
-+ [升级指导](https://www.kancloud.cn/manual/thinkphp5_1/354155) 
-
-## 目录结构
-
-初始的目录结构如下：
-
-~~~
-www  WEB部署目录（或者子目录）
-├─application           应用目录
-│  ├─common             公共模块目录（可以更改）
-│  ├─module_name        模块目录
-│  │  ├─common.php      模块函数文件
-│  │  ├─controller      控制器目录
-│  │  ├─model           模型目录
-│  │  ├─view            视图目录
-│  │  └─ ...            更多类库目录
-│  │
-│  ├─command.php        命令行定义文件
-│  ├─common.php         公共函数文件
-│  └─tags.php           应用行为扩展定义文件
-│
-├─config                应用配置目录
-│  ├─module_name        模块配置目录
-│  │  ├─database.php    数据库配置
-│  │  ├─cache           缓存配置
-│  │  └─ ...            
-│  │
-│  ├─app.php            应用配置
-│  ├─cache.php          缓存配置
-│  ├─cookie.php         Cookie配置
-│  ├─database.php       数据库配置
-│  ├─log.php            日志配置
-│  ├─session.php        Session配置
-│  ├─template.php       模板引擎配置
-│  └─trace.php          Trace配置
-│
-├─route                 路由定义目录
-│  ├─route.php          路由定义
-│  └─...                更多
-│
-├─public                WEB目录（对外访问目录）
-│  ├─index.php          入口文件
-│  ├─router.php         快速测试文件
-│  └─.htaccess          用于apache的重写
-│
-├─thinkphp              框架系统目录
-│  ├─lang               语言文件目录
-│  ├─library            框架类库目录
-│  │  ├─think           Think类库包目录
-│  │  └─traits          系统Trait目录
-│  │
-│  ├─tpl                系统模板目录
-│  ├─base.php           基础定义文件
-│  ├─console.php        控制台入口文件
-│  ├─convention.php     框架惯例配置文件
-│  ├─helper.php         助手函数文件
-│  ├─phpunit.xml        phpunit配置文件
-│  └─start.php          框架入口文件
-│
-├─extend                扩展类库目录
-├─runtime               应用的运行时目录（可写，可定制）
-├─vendor                第三方类库目录（Composer依赖库）
-├─build.php             自动生成定义文件（参考）
-├─composer.json         composer 定义文件
-├─LICENSE.txt           授权说明文件
-├─README.md             README 文件
-├─think                 命令行入口文件
-~~~
-
-> 可以使用php自带webserver快速测试
-> 切换到根目录后，启动命令：php think run
-
-## 命名规范
-
-`ThinkPHP5`遵循PSR-2命名规范和PSR-4自动加载规范，并且注意如下规范：
-
-### 目录和文件
-
-*   目录不强制规范，驼峰和小写+下划线模式均支持；
-*   类库、函数文件统一以`.php`为后缀；
-*   类的文件名均以命名空间定义，并且命名空间的路径和类库文件所在路径一致；
-*   类名和类文件名保持一致，统一采用驼峰法命名（首字母大写）；
-
-### 函数和类、属性命名
-
-*   类的命名采用驼峰法，并且首字母大写，例如 `User`、`UserType`，默认不需要添加后缀，例如`UserController`应该直接命名为`User`；
-*   函数的命名使用小写字母和下划线（小写字母开头）的方式，例如 `get_client_ip`；
-*   方法的命名使用驼峰法，并且首字母小写，例如 `getUserName`；
-*   属性的命名使用驼峰法，并且首字母小写，例如 `tableName`、`instance`；
-*   以双下划线“__”打头的函数或方法作为魔法方法，例如 `__call` 和 `__autoload`；
-
-### 常量和配置
-
-*   常量以大写字母和下划线命名，例如 `APP_PATH`和 `THINK_PATH`；
-*   配置参数以小写字母和下划线命名，例如 `url_route_on` 和`url_convert`；
-
-### 数据表和字段
-
-*   数据表和字段采用小写加下划线方式命名，并注意字段名不要以下划线开头，例如 `think_user` 表和 `user_name`字段，不建议使用驼峰和中文作为数据表字段命名。
-
-## 参与开发
-
-请参阅 [ThinkPHP5 核心框架包](https://github.com/top-think/framework)。
-
-## 版权信息
-
-ThinkPHP遵循Apache2开源协议发布，并提供免费使用。
-
-本项目包含的第三方源码和二进制文件之版权信息另行标注。
-
-版权所有Copyright © 2006-2018 by ThinkPHP (http://thinkphp.cn)
-
-All rights reserved。
-
-ThinkPHP® 商标和著作权所有者为上海顶想信息科技有限公司。
-
-更多细节参阅 [LICENSE.txt](LICENSE.txt)
+> 小程序
++ 完善用户认证

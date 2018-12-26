@@ -11,5 +11,5 @@ namespace app\common\model;
 
 class MiniLog extends Base
 {
-    protected $table = 'mini_log';
+
 }

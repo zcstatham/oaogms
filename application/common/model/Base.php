@@ -14,7 +14,7 @@ use think\Model;
 class Base extends Model
 {
     protected $autoWriteTimestamp = 'datetime';
-    protected $updateTime = 'last_login_timestamp';
+    protected $updateTime = false;
     protected $createTime = 'create_timestamp';
 
     protected function setPasswordAttr($value, $data){

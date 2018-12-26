@@ -236,6 +236,7 @@
     };
 
     var colorNames = Object.keys(window.chartColors);
+    var chartlists = [];
     getCharts({id:1});
     $('.selectgroup-button').on('click',function(e){
         var id = $('#mini').val();
@@ -294,7 +295,12 @@
                     });
                     config.data['datasets'].push(data)
                 });
-                new Chart(chartbox[index], config)
+                if(!chartlists[index]){
+                    chartlists[index] = new Chart(chartbox[index], config)
+                }else {
+                    chartlists[index].data = config.data;
+                    chartlists[index].update();
+                }
             });
         });
     }
