@@ -15,11 +15,18 @@
 //
 use think\facade\Route;
 
-Route::domain('api',function() {
-    Route::rule('log/lg','api/index/login');
-    Route::rule('log/ah','api/index/authed');
-    Route::rule('log/ad','api/index/browsead');
-});
+Route::domain('api',array(
+    //米大师接口
+    'mds/recharge'    => 'api/order/recharge?type=mda',
+    'mds/getbalance'  => 'api/order/getbalance?type=mda',
+    'mds/pay'         => 'api/order/pay?type=mda',
+    'mds/refund'      => 'api/order/refund?type=mda',
+    'mds/reward'      => 'api/order/reward?type=mda',
+
+    'log/lg'      => 'api/index/login',
+    'log/ah'      => 'api/index/authed',
+    'log/ad'      => 'api/index/browsead',
+));
 
 
 Route::domain('admin',array(
