@@ -15,7 +15,7 @@ class Auth
     public function handle(Request $request, \Closure $next)
     {
         if(!is_login()){
-            redirect('/login');
+            return redirect('/login');
         }
         $this->url_path = strtolower($request->module() . '/' . $request->controller() . '/' . $request->action());
         if (!in_array(strtolower($request->url()), array('admin/index/login', 'admin/index/logout', 'admin/index/verify'))) {

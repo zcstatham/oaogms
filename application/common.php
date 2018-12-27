@@ -72,7 +72,8 @@ function is_administrator($uid = null)
  * @param $action
  * @return string
  */
-function strcode($string, $action = 'encode') {
+function strcode($string, $action = 'encode')
+{
     $action != 'encode' && $string = base64_decode($string);
     $code = '';
     $key = substr(md5(rand_string(6)), 8, 18);
@@ -85,13 +86,14 @@ function strcode($string, $action = 'encode') {
     return ($action != 'decode' ? base64_encode($code) : $code);
 }
 
-function json_error_exception($code = '',$msg = '')
+function json_error_exception($code = '', $msg = '')
 {
-    $error       = config('siteinfo.error_code');
-    $errorCode  = isset($error[$code]) ? $code : 1000;
-    $errorMsg   = $msg != '' ? (isset($error[$code]) ?  $error[$code]." :".$msg : $msg) : (isset($error[$code]) ?  $error[$code] : "请求错误");
+    $error = config('siteinfo.error_code');
+    $errorCode = isset($error[$code]) ? $code : 1000;
+    $errorMsg = $msg != '' ? (isset($error[$code]) ? $error[$code] . " :" . $msg : $msg) : (isset($error[$code]) ? $error[$code] : "请求错误");
     header("Content-type: application/json;");
-    echo  json_encode(array('code'=>$errorCode,'msg'=>$errorMsg));exit;
+    echo json_encode(array('code' => $errorCode, 'msg' => $errorMsg));
+    exit;
 }
 
 
@@ -106,7 +108,8 @@ function json_error_exception($code = '',$msg = '')
  * @param string $suffix 截断显示字符
  * @return string
  */
-function msubstr($str, $start = 0, $length, $charset = "utf-8", $suffix = true) {
+function msubstr($str, $start = 0, $length, $charset = "utf-8", $suffix = true)
+{
     if (function_exists("mb_substr")) {
         $slice = mb_substr($str, $start, $length, $charset);
     } elseif (function_exists('iconv_substr')) {
@@ -115,10 +118,10 @@ function msubstr($str, $start = 0, $length, $charset = "utf-8", $suffix = true) 
             $slice = '';
         }
     } else {
-        $re['utf-8']  = "/[\x01-\x7f]|[\xc2-\xdf][\x80-\xbf]|[\xe0-\xef][\x80-\xbf]{2}|[\xf0-\xff][\x80-\xbf]{3}/";
+        $re['utf-8'] = "/[\x01-\x7f]|[\xc2-\xdf][\x80-\xbf]|[\xe0-\xef][\x80-\xbf]{2}|[\xf0-\xff][\x80-\xbf]{3}/";
         $re['gb2312'] = "/[\x01-\x7f]|[\xb0-\xf7][\xa0-\xfe]/";
-        $re['gbk']    = "/[\x01-\x7f]|[\x81-\xfe][\x40-\xfe]/";
-        $re['big5']   = "/[\x01-\x7f]|[\x81-\xfe]([\x40-\x7e]|\xa1-\xfe])/";
+        $re['gbk'] = "/[\x01-\x7f]|[\x81-\xfe][\x40-\xfe]/";
+        $re['big5'] = "/[\x01-\x7f]|[\x81-\xfe]([\x40-\x7e]|\xa1-\xfe])/";
         preg_match_all($re[$charset], $str, $match);
         $slice = join("", array_slice($match[0], $start, $length));
     }
@@ -131,18 +134,19 @@ function msubstr($str, $start = 0, $length, $charset = "utf-8", $suffix = true) 
 
 
 /**
-+----------------------------------------------------------
+ * +----------------------------------------------------------
  * 产生随机字串，可用来自动生成密码 默认长度6位 字母和数字混合
-+----------------------------------------------------------
+ * +----------------------------------------------------------
  * @param string $len 长度
  * @param string $type 字串类型
  * 0 字母 1 数字 其它 混合
  * @param string $addChars 额外字符
-+----------------------------------------------------------
+ * +----------------------------------------------------------
  * @return string
 +----------------------------------------------------------
  */
-function rand_string($len = 6, $type = '', $addChars = '') {
+function rand_string($len = 6, $type = '', $addChars = '')
+{
     $str = '';
     switch ($type) {
         case 0:
@@ -171,7 +175,7 @@ function rand_string($len = 6, $type = '', $addChars = '') {
     }
     if ($type != 4) {
         $chars = str_shuffle($chars);
-        $str   = substr($chars, 0, $len);
+        $str = substr($chars, 0, $len);
     } else {
         // 中文随机字
         for ($i = 0; $i < $len; $i++) {
@@ -181,7 +185,8 @@ function rand_string($len = 6, $type = '', $addChars = '') {
     return $str;
 }
 
-function get_client_ip(){
+function get_client_ip()
+{
     return request()->ip();
 }
 
@@ -192,7 +197,8 @@ function get_client_ip(){
  * @param string $mode
  * @return bool
  */
-function checkRule($rule, $type = 1, $mode = 'url') {
+function checkRule($rule, $type = 1, $mode = 'url')
+{
     static $Auth = null;
     if (!$Auth) {
         $Auth = new \author\Auth();
@@ -209,46 +215,49 @@ function checkRule($rule, $type = 1, $mode = 'url') {
  * @param $array
  * @return bool
  */
-function in_array_case($value, $array) {
+function in_array_case($value, $array)
+{
     return in_array(strtolower($value), array_map('strtolower', $array));
 }
 
-function encrypt($data,$key){
+function encrypt($data, $key)
+{
     $char = '';
-    $str= '';
+    $str = '';
     $key = md5($key);
     $x = 0;
     $len = strlen($data);
     $l = strlen($key);
-    for($i = 0; $i<$len; $i++){
-        if($x == $l){
+    for ($i = 0; $i < $len; $i++) {
+        if ($x == $l) {
             $x = 0;
         }
         $char .= $key[$x];
         $x++;
     }
-    for($i=0;$i<$len;$i++){
+    for ($i = 0; $i < $len; $i++) {
         $str .= chr(ord($data{$i}) + ord($char{$i}));
     }
     return base64_encode($str);
 }
 
-function decrypt($data,$key){
+function decrypt($data, $key)
+{
     $char = '';
-    $str= '';
+    $str = '';
     $key = md5($key);
     $x = 0;
     $data = base64_decode($data);
     $len = strlen($data);
     $l = strlen($key);
-    for($i=0;$i<$len;$i++){
-        if($x == $l){
+    for ($i = 0; $i < $len; $i++) {
+        if ($x == $l) {
             $x = 0;
         }
-        $char .= substr($key,$x,1);
+        $char .= substr($key, $x, 1);
         $x++;
     }
-    for($i = 0;$i<$len;$i++){
+    for ($i = 0; $i < $len; $i++) {
         $str .= chr(ord($data{$i}) - ord($char{$i}));
     }
     return $str;
@@ -296,12 +305,13 @@ function decodeN($tex)
     return $reslutstr;
 }
 
-function saveImgage($filename,$imageData){
+function saveImgage($filename, $imageData)
+{
     $src = $filename;
-    $img = @file_put_contents($src,$imageData);
-    if($img){
+    $img = @file_put_contents($src, $imageData);
+    if ($img) {
         return $src;
-    }else{
+    } else {
         return false;
     }
 }
@@ -311,4 +321,24 @@ function mkdirs($dir, $mode = 0777)
     if (is_dir($dir) || @mkdir($dir, $mode)) return TRUE;
     if (!mkdirs(dirname($dir), $mode)) return FALSE;
     return @mkdir($dir, $mode);
+}
+
+/**
+ * 24位订单号 = 14位日期 + 8位随机数 + 2位检查码
+ * @return string
+ * @throws Exception
+ */
+function createOrderId()
+{
+    $date = date('YmdHis');
+    $rand = random_int(10000000, 99999999);
+    $main = $date . $rand;
+
+    $len = strlen($main);
+    $sum = 0;
+    for ($i = 0; $i < $len; $i++) {
+        $sum += (int)(substr($len, $i, 1));
+    }
+    $pad = str_pad((100 - $sum % 100) % 100, 2, '0', STR_PAD_LEFT);
+    return $main.$pad;
 }

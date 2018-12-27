@@ -18,7 +18,7 @@ class Check
         $jwt = new EncryptService();
         $checkToken = $jwt->checkToken($request->header('token'));
         if(isset($checkToken['code']) && $checkToken['code'] != '200'){
-            $this->error(json_encode($checkToken));
+            json_error_exception(json_encode($checkToken));
         }
         return $next($request);
     }
