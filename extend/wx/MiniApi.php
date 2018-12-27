@@ -8,34 +8,31 @@
 
 namespace wx;
 
-
+use think\Request;
 class MiniApi extends WxApi
 {
 
     protected $appSecret;
+    protected $sessionkey;
     protected $mdasSecret = 'kwTvC3LCjXHT35si1U6m0IQ4IKsLupGi';
     protected $wxhost = array(
         'wxlogin' => 'https://api.weixin.qq.com/sns/jscode2session?',
         'wxaqrcode' => 'https://api.weixin.qq.com/cgi-bin/wxaapp/createwxaqrcode?access_token=',
         'wxacode' => 'https://api.weixin.qq.com/wxa/getwxacode?access_token=',
+        'checksession' => 'https://api.weixin.qq.com/wxa/checksession?access_token=',
     );
-    protected $midas = array(
-        'balance'=> 'https://api.weixin.qq.com/cgi-bin/midas/getbalance?access_token=',
-        'pay'=> 'https://api.weixin.qq.com/cgi-bin/midas/pay?access_token=',
-        'cancelpay'=> 'https://api.weixin.qq.com/cgi-bin/midas/cancelpay?access_token=',
-        'present'=> 'https://api.weixin.qq.com/cgi-bin/midas/present?access_token=',
-    );
+    protected $midasUrl = 'https://api.weixin.qq.com/cgi-bin/midas/%action%?access_token=';
 
     public function __construct($appid,$isDebug){
         parent::__construct($appid);
         if($isDebug){
-            $this->midas = array(
-                'balance'=> 'https://api.weixin.qq.com/cgi-bin/midas/sandbox/getbalance?access_token=',
-                'pay'=> 'https://api.weixin.qq.com/cgi-bin/midas/sandbox/pay?access_token=',
-                'cancelpay'=> 'https://api.weixin.qq.com/cgi-bin/midas/sandbox/cancelpay?access_token=',
-                'present'=> 'https://api.weixin.qq.com/cgi-bin/midas/sandbox/present?access_token=',
-            );
+            $this->midasUrl = 'https://api.weixin.qq.com/cgi-bin/midas/sandbox/%action%?access_token=';
             $this->midas = 'obdjavyWXH1xe3qnr0XNqMNirzCPfZ8n';
+        }
+        $this->sessionkey = decrypt(Request->param('userInfo')['sessionkey'],config('siteinfo.mini_salt'));
+        $checksession = $this->checkSessionKey();
+        if($checksession['errcode'] != 0){
+            return false;
         }
     }
 
@@ -47,8 +44,6 @@ class MiniApi extends WxApi
     public function wxLogin($code, $appSecret)
     {
         $url = $this->wxhost['wxlogin'] . 'appid=' . $this->appid . '&secret=' . $appSecret . '&js_code=' . $code . '&grant_type=authorization_code';
-        $return = json_decode($this->curl_http($url), true);
-        session('wx_session_key',$return['session_key']);
         return json_decode($this->curl_http($url), true);
     }
 
@@ -78,48 +73,56 @@ class MiniApi extends WxApi
         return $this->curl_http($url, $data);
     }
 
+    private function checkSessionKey(){
+        $url = $this->wxhost['checksession'] .$this->getAccessToken($appSecret). 'signature=' . hash_hmac('sha256', '', $this->sessionkey, true) . '&openid=' . Request->param('userInfo')['openid'] . '&sig_method=hmac_sha256';
+        return json_decode($this->curl_http($url), true);
+    }
+
 
 // +----------------------------------------------------------------------
 // | 米大师虚拟支付——游戏币模式
 // +----------------------------------------------------------------------
-// | 查询余额 getBalance
-// | 游戏扣费 payment
-// | 游戏退款 refund
-// | 直接赠送 present
+// | 统一接口 mdasPayment
+// | 操作类型 type
+// | 操作参数 data
+// | 返回值   json
 // +----------------------------------------------------------------------
-
-    public function getBalance(){
-
-    }
-
-    public function payment(){
-
-    }
-
-    public function refund(){
-
-    }
-
-    public function present(){
+    public function mdasPayment($type,$data){
         $params = array(
-            'openid' => $this->appid,
+            'openid' => $data['appid'],
             'appid' => $this->appid,
-            'offer_id' => $this->appid,
+            'offer_id' => $data['offerid'],
             'ts' => (string)time(),
-            'zone_id' => $this->appid,
+            'zone_id' => $data['zoneid'],
             'pf' => 'android',
             'user_ip' => get_client_ip(),
-            'bill_no' => '',
-            'present_counts' => 'android',
+            'bill_no' => $data['billno'],
         );
-        $params['sig'] = $this->getSign($params,'/cgi-bin/midas/present');
+        switch ($type) {
+            case 'present':
+                $params['present_counts'] = $data['item'];
+                break;
+            case 'pay':
+                $params['amt'] = $data['item'];
+                break;
+            case 'getbalance':
+                unset($params['bill_no']);
+                break;
+            case 'cancelpay':
+                $params['pay_item'] = $data['item'];//否
+                break;
+        }
+        $url = strtr($midasUrl,'%action%',$type);
+        $uri = strtr('//cgi-bin//midas//action','action',$type);
+        $params['sig'] = $this->getSign($params,$uri);
         $params['access_token'] = $this->getAccessToken($this->appSecret);
-        $params['mp_sig'] = $this->getMpSig($params);
+        $params['mp_sig'] = $this->getMpSig($params,$uri,'mp_sig');
+        return json_decode($this->curl_http($url, true);
     }
 
-    private function getSign($params,$path,$type='sign')
+    private function getSign($params,$path,$type='sig')
     {
-        $secret = $type == 'sign'? $this->mdasSecret: session('wx_session_key');
+        $secret = $type == 'sig'? $this->mdasSecret:$this->sessionkey;
         $string = '';
         ksort($params);
         foreach ($params as $k => $v) {
@@ -129,7 +132,4 @@ class MiniApi extends WxApi
         return hash_hmac('sha256', $string, $this->mdasSecret, true);
     }
 
-    private function getMpSig($params){
-
-    }
 }

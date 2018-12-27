@@ -48,22 +48,21 @@ class User extends Base {
         if(!$this->where('uid',$uid)->find()){
             return false;
         }
+        //更新用户信息表，返回数据
         $result = $this->save(array(
             'last_login_ip'=>get_client_ip(),
         ),['uid' => $uid]);
         if(!$result){
             return false;
         }
-        return true;
+        return $result;
     }
 
     public function register($aid,$mid,$code){
         $mInfo = model('Mini')->get($mid);
-        Log::write(['miniInfo'=>$mInfo->toArray()]);
         $wx = new \com\WxApi($mInfo['appid']);
         $wxInfo = $wx->wxLogin($code,$mInfo['appsecret']);
-        Log::write(['wxInfo'=>$wxInfo]);
-        if(isset($wxInfo['errcode']) && $wxInfo['errcode']!=0){
+        if(！isset($wxInfo['session_key'])){
             return false;
         }
         $uinfo = $this->field('uid')->where('openid',$wxInfo['openid'])->find();
@@ -72,7 +71,7 @@ class User extends Base {
             Db::startTrans();
             try {
                 $uid = db('user')->insertGetId([
-                    'openid' => $wxInfo['openid'],
+                    'openid' => $openid,
                     'reg_ip' => get_client_ip(),
                     'last_login_ip' => get_client_ip(),
                     'last_login_timestamp' => $now,
@@ -94,18 +93,20 @@ class User extends Base {
                     'mid' => $mid,
                     'create_timestamp' => $now
                 ));
-                Log::write('startTrans');
                 Db::commit();
-                Log::write('commit');
             } catch (\Exception $e) {
                 // 回滚事务
                 Db::rollback();
-                Log::write('rollback');
                 return false;
             }
         }
-//        session('user_'.$user['uid'].'_session_key',$wxInfo);
-        return $uinfo['uid'];
+        $data = array(
+            'uid' =>$uinfo['uid'],
+            'openid' =>md5($uinfo['openid'],$uinfo['uid'].config('siteinfo.mini_salt')),
+            'sessionKey' =>md5($wxInfo['session_key'],$uinfo['uid'].config('siteinfo.mini_salt'))
+        );
+        $jwt = new EncryptService();
+        return $jwt->createToken($data);
     }
 
     public function setUserInfo($info){

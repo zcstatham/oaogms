@@ -33,34 +33,36 @@ class Index extends controller
         return 'hello fucker';
     }
 
-    //访问接口
+    //访问接口——>登录->->返回token
     public function login()
     {
         $code = $this->request->post('code');
         if (!empty($this->uid)) {
-            model('User')->login($this->uid);
+            $info = model('User')->login($this->uid);
             if (!$this->log('login')) {
                 $this->data['code'] = 0; //日志写入失败
                 $this->data['data'] = 'error,try again later';
             }else {
                 $this->data['code'] = 1; //登录成功
-                $this->data['data'] = 'login success';
+                $this->data['data'] = array(
+                    'info'=>$info,
+                    'token'=>$token
+                );
             }
         }
         if(!$this->uid && isset($code)){
-            $uid = model('User')->register($this->aid,$this->mid, $code);
-            if ($uid === false ) {
+            $token = model('User')->register($this->aid,$this->mid, $code);
+            if ($token === false ) {
                 $this->data['code'] = 0; //日志写入失败
                 $this->data['data'] = 'error,try again later';
             }else {
                 $this->data['code'] = 2; //注册成功
-                $this->data['data'] = encrypt((string)$uid, config('siteinfo.user_secret'));
+                $this->data['data'] = $token;
             }
         } else {
             $this->data['code'] = -1; //日志写入失败
             $this->data['data'] = 'error,request must have params \'code\'';
         }
-        Log::record(['return'=>$this->data]);
         return json($this->data);
     }
 
@@ -120,7 +122,6 @@ class Index extends controller
             'aid' => $this->aid,
             'mid' => $this->mid
         );
-        Log::record(['log'=>$data]);
         return model('MiniLog')->save($data);
     }
 
