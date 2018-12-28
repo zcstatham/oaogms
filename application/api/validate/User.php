@@ -6,7 +6,7 @@
  * Time: 13:39
  */
 
-namespace app\common\validate;
+namespace app\api\validate;
 
 
 use think\Validate;
@@ -14,11 +14,8 @@ use think\Validate;
 class User extends Validate
 {
     protected $rule = array(
-        'username'   => 'require|unique:sys_admin',
-        'email'      => 'require|unique:sys_admin|email',
-        'mobile'     => 'unique:sys_admin',
-        'password'   => 'require',
-        'repassword' => 'require|confirm:password'
+        'mid'   => 'require|number',
+        'code' => 'require'
     );
     protected $message = array(
         'username.require'    => '用户名必须',

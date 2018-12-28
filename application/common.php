@@ -86,6 +86,11 @@ function strcode($string, $action = 'encode')
     return ($action != 'decode' ? base64_encode($code) : $code);
 }
 
+/**
+ * 异常处理函数
+ * @param string $code
+ * @param string $msg
+ */
 function json_error_exception($code = '', $msg = '')
 {
     $error = config('siteinfo.error_code');
@@ -185,6 +190,10 @@ function rand_string($len = 6, $type = '', $addChars = '')
     return $str;
 }
 
+/**
+ * 获取客户端ip
+ * @return mixed
+ */
 function get_client_ip()
 {
     return request()->ip();
@@ -220,6 +229,12 @@ function in_array_case($value, $array)
     return in_array(strtolower($value), array_map('strtolower', $array));
 }
 
+/**
+ * 简单字符串混淆
+ * @param $data
+ * @param $key
+ * @return string
+ */
 function encrypt($data, $key)
 {
     $char = '';
@@ -264,7 +279,7 @@ function decrypt($data, $key)
 }
 
 /**
- * 加解密 返回字母+ 数字
+ * 加密 返回字母+ 数字
  * @param $tex
  * @param null $key
  * @return string
@@ -305,6 +320,12 @@ function decodeN($tex)
     return $reslutstr;
 }
 
+/**
+ * 存储二进制图片
+ * @param $filename
+ * @param $imageData
+ * @return bool
+ */
 function saveImgage($filename, $imageData)
 {
     $src = $filename;
@@ -316,6 +337,12 @@ function saveImgage($filename, $imageData)
     }
 }
 
+/**
+ * 创建文件夹
+ * @param $dir
+ * @param int $mode
+ * @return bool
+ */
 function mkdirs($dir, $mode = 0777)
 {
     if (is_dir($dir) || @mkdir($dir, $mode)) return TRUE;

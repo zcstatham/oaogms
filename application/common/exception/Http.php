@@ -5,9 +5,15 @@ use Exception;
 use think\exception\Handle;
 use think\exception\HttpException;
 use think\exception\ValidateException;
+use think\facade\Log;
 
 class Http extends Handle
 {
+    public $code = 500;
+    public $msg = '服务器错误';
+    public $errorCode = 9999;
+    protected $error_code_map;
+
     public function render(Exception $e)
     {
         // 参数验证错误
@@ -20,8 +26,15 @@ class Http extends Handle
             return response($e->getMessage(), $e->getStatusCode());
         }
 
-        // 其他错误交给系统处理
+        if ($e instanceof BaseException) {
+            $this->code = $e->code;
+            $return = array(
+                'msg' =>$e->msg,
+                'errorCode' => $e->errorCode
+            );
+            return json($return, $this->code);
+        }
+
         return parent::render($e);
     }
-
 }

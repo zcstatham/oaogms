@@ -12,10 +12,12 @@ namespace wx;
 class WxApp extends wxApi
 {
 
-    protected $appSecret;
+    protected $mchid = '1507521521';
+    protected $appSecret = 'oaottt131419oaottt131419oaottt13';
 
     protected $wxhost = array(
         'wxpay' => 'https://api.mch.weixin.qq.com/pay/unifiedorder',
+        'transfers' => 'https://api.mch.weixin.qq.com/mmpaymkttransfers/promotion/transfers',
         'wxacodeunlimit' => 'https://api.weixin.qq.com/wxa/getwxacodeunlimit?access_token=',
     );
     /**
@@ -27,49 +29,33 @@ class WxApp extends wxApi
     public function wxpay($wxInfo, $orderInfo)
     {
         $unifiedorder = $this->unifiedorder($wxInfo, $orderInfo);
-        $parameters = array(
+        $params = array(
             'appId' => $this->appid,
             'timeStamp' => (string)time(),
             'nonceStr' => $this->getNonceStr(),
             'package' => 'prepay_id=' . $unifiedorder['prepay_id'],//数据包
             'signType' => 'MD5'//签名方式
         );
-        $parameters['paySign'] = $this->getSign($parameters);
-        return $parameters;
+        $params['paySign'] = $this->getSign($params);
+        return $params;
     }
 
-    /**
-     * 获取小程序码A
-     * @param $appSecret
-     * @return mixed
-     */
-    public function createWXAQRCode($appSecret,$data,$type)
-    {
-        $accessToken = session('wxAccessToken');
-        if (!$accessToken['access_token'] || time()>$accessToken['time']) {
-            $accessToken = $this->getAccessToken($appSecret);
-            \session('access_token',[
-                'access_token'=>$accessToken['access_token'],
-                'time'=>time() + $accessToken['expires_in'],
-            ]);
-            $accessToken = $accessToken['access_token'];
-        }
-        switch ($type){
-            case 'a':
-                $url = $this->wxhost['wxacode'] . $accessToken;
-                break;
-            case 'b':
-                $url = $this->wxhost['wxacodeunlimit'] . $accessToken;
-                $path = $data['path'];
-                $pos = stripos($path,'?');
-                $data['scene'] = substr($path,$pos+1);
-                $data['path'] = substr($path,0,$pos);
-                break;
-            case 'c':
-                $url = $this->wxhost['wxaqrcode'] . $accessToken;
-                break;
-        }
-        return $this->curl_http($url, $data);
+    public function transfers($order){
+        $params = array(
+            'mch_appid' => $this->appid,//小程序ID
+            'mchid' => $this->mchid,//商户号
+            'nonce_str' => $this->getNonceStr(),//随机字符串
+            'sign' => '签名',//商品描述
+            'partner_trade_no' => $order['order_sn'],//商户订单号
+            'openid' => $order['openid'],//待提现用户openid
+            'check_name' => 'NO_CHECK',
+            'amount' => floatval($order['money'] * 100),//总金额 单位 分
+            'desc' => $order['desc'],
+            'spbill_create_ip' => $_SERVER['REMOTE_ADDR'],//终端IP
+        );
+        $params['sign'] = $this->getSign($params);
+        $xmlData = arrayToXml($params, 'xml');
+        return xmlToArray($this->curl_http($this->wxhost['transfers'], $xmlData));
     }
 
     /**
@@ -91,9 +77,9 @@ class WxApp extends wxApi
      */
     private function unifiedorder($wxInfo, $orderInfo)
     {
-        $parameters = array(
+        $params = array(
             'appid' => $this->appid,//小程序ID
-            'mch_id' => $wxInfo['mch_id'],//商户号
+            'mch_id' => $this->mchid,//商户号
             'nonce_str' => $this->getNonceStr(),//随机字符串
             'body' => '测试',//商品描述
             'sign' => '签名',//商品描述
@@ -105,8 +91,8 @@ class WxApp extends wxApi
             'openid' => $wxInfo['openid'],//用户id
         );
         // 统一下单签名
-        $parameters['sign'] = $this->getSign($parameters);
-        $xmlData = arrayToXml($parameters, 'xml');
+        $params['sign'] = $this->getSign($params);
+        $xmlData = arrayToXml($params, 'xml');
         return xmlToArray(curl_http($this->wxhost['wxpay'], $xmlData));
     }
 
@@ -127,14 +113,14 @@ class WxApp extends wxApi
 
     /**
      * 签名
-     * @param $parameters
+     * @param $params
      * @return string
      */
-    private function getSign($parameters)
+    private function getSign($params)
     {
         $string = '';
-        ksort($parameters);
-        foreach ($parameters as $k => $v) {
+        ksort($params);
+        foreach ($params as $k => $v) {
             $string .= $k . "=" . $v . "&";
         }
         return strtoupper(md5($string . '$key=' . $this->appSecret));

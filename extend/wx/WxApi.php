@@ -9,7 +9,6 @@
 namespace wx;
 
 
-use think\facade\Session;
 class WxApi
 {
     protected $appid;
@@ -31,13 +30,12 @@ class WxApi
         if (!$accessToken['access_token'] || time()>$accessToken['time']) {
             $url = $this->access . 'appid=' . $this->appid . '&secret=' . $appSecret;
             $accessToken = json_decode($this->curl_http($url), true);
-            \session('access_token',[
+            \session('wxAccessToken',[
                 'access_token'=>$accessToken['access_token'],
                 'time'=>time() + $accessToken['expires_in'],
             ]);
-            $accessToken = $accessToken['access_token'];
         }
-        return $accessToken;
+        return $accessToken['access_token'];
     }
 
     /**

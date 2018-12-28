@@ -2,6 +2,8 @@
 
 namespace app\http\middleware;
 
+use app\common\exception\EncryptException;
+use app\common\exception\HttpException;
 use encrypt\EncryptService;
 use think\Request;
 use traits\controller\Jump;
@@ -13,13 +15,17 @@ class Check
     public function handle(Request $request, \Closure $next)
     {
         if(!$request->isPost()){
-            json_error_exception('1001');
+            throw new HttpException('2124');
         }
         $jwt = new EncryptService();
-        $checkToken = $jwt->checkToken($request->header('token'));
+        $checkToken = $jwt->checkToken($request->header('Authorization'));
         if(isset($checkToken['code']) && $checkToken['code'] != '200'){
-            json_error_exception(json_encode($checkToken));
+            throw new EncryptException();
         }
+        if($checkToken['scopes'] === 'refresh_token'){
+            $request->newToken =  $jwt->createToken($checkToken['params']);
+        }
+        $request->userInfo = $checkToken['data'];
         return $next($request);
     }
 }

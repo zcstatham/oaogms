@@ -9,19 +9,18 @@
 namespace encrypt;
 
 use \Firebase\JWT\JWT;
-use think\Exception; //导入JWT
+use think\Exception;
 
+
+// +----------------------------------------------------------------------
+// | JWT Token鉴权
+// +----------------------------------------------------------------------
+// | 主要操作 createToken,checkToken
+// +----------------------------------------------------------------------
 class EncryptService
 {
 
-    /**
-     * 头部 公共参数
-     * @param array $header 头部参数数组
-     * @param string $alg 声明签名算法为SHA256
-     * @return string $typ 声明类型为jwt
-     */
-    public static $TokenKey = 'oAofD99PY76cs8Gvt';
-
+    public $secret = 'oAofD99PY76cs8Gvt';
     /**
      * 创建 token
      * @param array $data 必填 自定义参数数组
@@ -29,14 +28,7 @@ class EncryptService
      * @param string $scopes 选填 token标识，请求接口的token
      * @return string
      */
-    /**
-     * 创建 token
-     * @param string $data 必填 自定义参数数组
-     * @param int $exp_time 必填 token过期时间
-     * @param string $scopes 选填 token标识，请求接口的token
-     * @return string
-     */
-    public static function createToken($data = "", $exp_time = 0, $scopes = "")
+    public function createToken($data = "", $exp_time = 0, $scopes = "access_token")
     {
         //JWT标准规定的声明，但不是必须填写的；
         //iss: jwt签发者
@@ -48,7 +40,7 @@ class EncryptService
         //jti: jwt的唯一身份标识，主要用来作为一次性token。
         //公用信息
         try {
-            $key = self::$TokenKey;
+            $key = $this->secret;
             $time = time(); //当前时间
             $token['iss'] = 'oaogms'; //签发者 可选
             $token['aud'] = 'oaogms'; //接收该JWT的一方，可选
@@ -100,10 +92,9 @@ class EncryptService
      * @param $jwt
      * @return mixed
      */
-    public static function checkToken($jwt)
+    public function checkToken($jwt)
     {
-        $key = self::$TokenKey;
-
+        $key = $this->secret;
         try {
             JWT::$leeway = 60;//当前时间减去60，把时间留点余地
             $decoded = JWT::decode($jwt, $key, ['HS256']); //HS256方式，这里要和签发的时候对应
@@ -135,7 +126,6 @@ class EncryptService
             $returndata['data'] = "";//返回的数据
             return $returndata; //返回信息
         }
-        //Firebase定义了多个 throw new，我们可以捕获多个catch来定义问题，catch加入自己的业务，比如token过期可以用当前Token刷新一个新Token
     }
 
     /**
@@ -146,7 +136,6 @@ class EncryptService
     public function index()
     {
         //url:http://www.cms.com/api/v1/index
-
         //自定义信息，不要定义敏感信息
         $data['userid'] = 21;//用户ID
         $data['username'] = "李10小龙";//用户ID
