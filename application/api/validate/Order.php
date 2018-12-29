@@ -9,15 +9,18 @@
 namespace app\api\validate;
 
 
-class Order
+use think\Validate;
+
+class Order extends Validate
 {
     protected $rule = array(
-        'moeny'   => 'require|>=:1',
+        'money'   => 'require|>=:1',
         'num'   => 'require|>=:1',
         'desc'   => 'require',
     );
     protected $message = array(
-        'moeny.require'    => '金额必须',
+        'money.require'    => '金额必须',
+        'num.require'      => '数量必须',
         'desc.require'     => '转账描述必须',
     );
     protected $scene = array(

@@ -22,8 +22,8 @@ class Check
         if(isset($checkToken['code']) && $checkToken['code'] != '200'){
             throw new EncryptException();
         }
-        if($checkToken['scopes'] === 'refresh_token'){
-            $request->newToken =  $jwt->createToken($checkToken['params']);
+        if($checkToken['data']['scopes'] === 'refresh_token'){
+            return json($jwt->createToken($checkToken['data']['params']));
         }
         $request->userInfo = $checkToken['data'];
         return $next($request);

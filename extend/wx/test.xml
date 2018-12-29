@@ -1,0 +1,12 @@
+<xml>
+    <mch_appid>wx13ba55893fe38903</mch_appid>
+    <mchid>1507521521</mchid>
+    <nonce_str>hk50wo74rcih66nrm7w12ib4sjy73he4</nonce_str>
+    <partner_trade_no>201812291153044672641496</partner_trade_no>
+    <openid>oII8B5XlV9cXssScJTzP_jGNgoBc</openid>
+    <check_name>NO_CHECK</check_name>
+    <amount>1</amount>
+    <desc>提现测试</desc>
+    <spbill_create_ip>127.0.0.1</spbill_create_ip>
+    <sign>FAEA50AF6DE03C821E5A135BEA2CF7C5</sign>
+</xml>

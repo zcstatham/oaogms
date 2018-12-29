@@ -14,7 +14,6 @@ use think\facade\Log;
 
 class Base extends Controller
 {
-
     public $uri;
     public $params;
     protected $data;
@@ -55,9 +54,6 @@ class Base extends Controller
             $params['mid'] = (int)$mid;
         }else {
             throw new HttpException(array('errorCode'=>2021));
-        }
-        if(isset($this->request->userInfo)){
-            $params['user_info'] = $this->request->userInfo;
         }
         return $params;
     }

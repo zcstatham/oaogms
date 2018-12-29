@@ -8,7 +8,6 @@
 
 namespace wx;
 
-
 class WxApi
 {
     protected $appid;
@@ -38,6 +37,28 @@ class WxApi
         return $accessToken['access_token'];
     }
 
+    public function arrayToXml($arr, $root)
+    {
+        $xml = '<' . $root . '>'.PHP_EOL;
+        foreach ($arr as $key => $val) {
+            if (is_array($val)) {
+                $xml .= '<' . $key . '>'. $this->arrayToXml($val, $root) . '</' . $key . '>'.PHP_EOL;
+            } else {
+                $xml .= '<' . $key . '>'. $val . '</' . $key . '>'.PHP_EOL;
+            }
+        }
+        $xml .= '</' . $root . '>'.PHP_EOL;
+        $a = mb_detect_encoding($xml);
+        return $xml;
+    }
+
+    public function xmlToArray($xml){
+        libxml_disable_entity_loader(true);
+        $xmlstring = simplexml_load_string($xml, 'SimpleXMLElement', LIBXML_NOCDATA);
+        $val = json_decode(json_encode($xmlstring),true);
+        return $val;
+    }
+
     /**
      * Curl
      * @param $url
@@ -46,25 +67,35 @@ class WxApi
      * @param bool $returnCookie
      * @return mixed|string
      */
-    function curl_http($url, $post = '', $cookie = '', $returnCookie = false)
+    public function curl_http($url, $post = '', $dataType='json',$ssl = true, $cookie = '', $returnCookie = false)
     {
         $curl = curl_init();
         curl_setopt($curl, CURLOPT_URL, $url);
         curl_setopt($curl, CURLOPT_USERAGENT, 'Mozilla/5.0 (compatible; MSIE 10.0; Windows NT 6.1; Trident/6.0)');
         curl_setopt($curl, CURLOPT_FOLLOWLOCATION, 1);
         curl_setopt($curl, CURLOPT_AUTOREFERER, 1);
-        curl_setopt($curl, CURLOPT_REFERER, "http://XXX");
+        curl_setopt($curl, CURLOPT_REFERER, "https://api.blockhuaxia.com");
         if ($post) {
             curl_setopt($curl, CURLOPT_POST, 1);
-            curl_setopt($curl, CURLOPT_POSTFIELDS, json_encode($post));
+            $post = $dataType == 'xml' ? $post:json_encode($post);
+            curl_setopt($curl, CURLOPT_POSTFIELDS, $post);
         }
         if ($cookie) {
             curl_setopt($curl, CURLOPT_COOKIE, $cookie);
         }
+        if($ssl){
+            curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, true); // 只信任CA颁布的证书
+            curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, 2);
+            curl_setopt($curl, CURLOPT_SSLCERTTYPE, 'PEM');//证书类型
+            curl_setopt($curl, CURLOPT_SSLCERT, './cert/apiclient_cert.pem');//证书位置
+            curl_setopt($curl, CURLOPT_SSLKEYTYPE, 'PEM');//CURLOPT_SSLKEY中规定的私钥的加密类型
+            curl_setopt($curl, CURLOPT_SSLKEY, './cert/apiclient_key.pem');//证书位置
+            curl_setopt($curl, CURLOPT_CAINFO, 'PEM');
+            curl_setopt($curl, CURLOPT_CAINFO, './cert/rootca.pem');
+        }
         curl_setopt($curl, CURLOPT_HEADER, $returnCookie);
         curl_setopt($curl, CURLOPT_TIMEOUT, 10);
         curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, false);
         $data = curl_exec($curl);
         if (curl_errno($curl)) {
             return curl_error($curl);

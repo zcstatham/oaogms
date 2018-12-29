@@ -9,30 +9,30 @@
 namespace app\api\controller;
 
 
-
 use app\common\exception\OrderException;
 use wx\WxApp;
 
 class Orders extends Base
 {
-    public function transfers(){
-        $valid = $this->validate($this->params,'app\admin\validate\Order');
-        if($valid!== true){
+    public function transfers()
+    {
+        $valid = $this->validate($this->params, 'app\api\validate\Order');
+        if ($valid !== true) {
             throw new OrderException(array(
-                'errorCode'=>'3021',
-                'msg'=>'验证失败：'.$valid
+                'errorCode' => '3021',
+                'msg' => '验证失败：' . $valid
             ));
         }
-        $money =$this->params['money']*$this->params['num'];
-        if($money < config('siteinfo.money')){
+        $money = $this->params['money'] * $this->params['num'];
+        if ($money < config('siteinfo.money_limit')) {
             throw new OrderException('3022');
         }
         $mInfo = model('Mini')->get($this->params['mid']);
         $order = array(
-            'order_sn'=>createOrderId(),
-            'openid'=>$this->params['user_info']['params']['okey'],
-            'money'=>$this->params['money']*$this->params['num'],
-            'desc'=>$this->params['desc'],
+            'order_sn' => createOrderId(),
+            'openid' => decrypt($this->params['userInfo']['params']['Okey'], $this->params['userInfo']['params']['uid'] . config('siteinfo.mini_salt')),
+            'money' => $this->params['money'] * $this->params['num'],
+            'desc' => $this->params['desc'],
         );
         $wxApp = new WxApp($mInfo['appid']);
         $result = $wxApp->transfers($order);
@@ -40,14 +40,14 @@ class Orders extends Base
         $result_code = trim(strtoupper($result['return_code']));
         if ($return_code == 'SUCCESS' && $result_code == 'SUCCESS') {
             $order = array(
-                'order_sn'=>$order['order_sn'],
-                'uid'=>$this->params['user_info']['params']['okey'],
-                'mid'=>$this->params['user_info']['params']['okey'],
-                'goods_num'=>$this->params['num'],
-                'goods_price'=>$this->params['money'],
-                'remark'=>$order['desc'],
-                'type'=>21,
-                'status'=>3,
+                'order_sn' => $order['order_sn'],
+                'uid' => $this->params['user_info']['params']['uid'],
+                'mid' => $this->params['mid'],
+                'goods_num' => $this->params['num'],
+                'goods_price' => $this->params['money'],
+                'remark' => $order['desc'],
+                'type' => 21,
+                'status' => 3,
             );
             model('Orders')->save($order);
             $this->data['msg'] = '提现成功';
@@ -58,23 +58,28 @@ class Orders extends Base
         return json($this->data);
     }
 
-    public function recharge($type){
-        
-    }
-
-    public function getbalance($type){
+    public function recharge($type)
+    {
 
     }
 
-    public function pay($type){
+    public function getbalance($type)
+    {
 
     }
 
-    public function refund($type){
+    public function pay($type)
+    {
 
     }
 
-    public function reward($type){
+    public function refund($type)
+    {
+
+    }
+
+    public function reward($type)
+    {
 
     }
 }

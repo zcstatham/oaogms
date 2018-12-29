@@ -98,7 +98,7 @@ class EncryptService
         try {
             JWT::$leeway = 60;//当前时间减去60，把时间留点余地
             $decoded = JWT::decode($jwt, $key, ['HS256']); //HS256方式，这里要和签发的时候对应
-            $arr = (array)$decoded;
+            $arr = json_decode(json_encode($decoded),TRUE);;
 
             $returndata['code'] = "200";//200=成功
             $returndata['msg'] = "成功";//

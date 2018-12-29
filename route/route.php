@@ -16,18 +16,21 @@
 use think\facade\Route;
 
 Route::domain('api',array(
+    'log/lg'                => 'api/index/login',
+    'log/ah'                => 'api/index/authed',
+    'log/ad'                => 'api/index/browsead',
+));
 
+Route::domain('api',array(
     'orders/transfers'   => 'api/orders/transfers',
     'orders/recharge'   => 'api/orders/recharge',
     'orders/getbalance'   => 'api/orders/getbalance',
     'orders/pay'   => 'api/orders/pay',
     'orders/refund'   => 'api/orders/refund',
     'orders/reward'   => 'api/orders/reward',
+))->middleware('Check');
 
-    'log/lg'                => 'api/index/login',
-    'log/ah'                => 'api/index/authed',
-    'log/ad'                => 'api/index/browsead',
-
+Route::domain('api',array(
     '/'                     => 'api/index/index',
     '/login'                => 'api/index/login',
     '/refresh'              => 'api/index/refresh',

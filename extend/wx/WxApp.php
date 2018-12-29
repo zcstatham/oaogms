@@ -9,7 +9,7 @@
 namespace wx;
 
 
-class WxApp extends wxApi
+class WxApp extends WxApi
 {
 
     protected $mchid = '1507521521';
@@ -45,17 +45,17 @@ class WxApp extends wxApi
             'mch_appid' => $this->appid,//小程序ID
             'mchid' => $this->mchid,//商户号
             'nonce_str' => $this->getNonceStr(),//随机字符串
-            'sign' => '签名',//商品描述
             'partner_trade_no' => $order['order_sn'],//商户订单号
             'openid' => $order['openid'],//待提现用户openid
-            'check_name' => 'NO_CHECK',
-            'amount' => floatval($order['money'] * 100),//总金额 单位 分
+            'check_name' => 'FORCE_CHECK',
+            're_user_name' => '赵铖',
+            'amount' => floatval($order['money'] * 1),//总金额 单位 分
             'desc' => $order['desc'],
             'spbill_create_ip' => $_SERVER['REMOTE_ADDR'],//终端IP
         );
         $params['sign'] = $this->getSign($params);
-        $xmlData = arrayToXml($params, 'xml');
-        return xmlToArray($this->curl_http($this->wxhost['transfers'], $xmlData));
+        $xmlData = $this->arrayToXml($params, 'xml');
+        return $this->xmlToArray($this->curl_http($this->wxhost['transfers'], $xmlData,'xml',true));
     }
 
     /**
@@ -92,8 +92,8 @@ class WxApp extends wxApi
         );
         // 统一下单签名
         $params['sign'] = $this->getSign($params);
-        $xmlData = arrayToXml($params, 'xml');
-        return xmlToArray(curl_http($this->wxhost['wxpay'], $xmlData));
+        $xmlData = $this->arrayToXml($params, 'xml');
+        return $this->xmlToArray($this->curl_http($this->wxhost['wxpay'], $xmlData));
     }
 
     /**

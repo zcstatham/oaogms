@@ -6,5 +6,6 @@
  * Time: 12:20
  */
 return [
-    'user_secret'=>'ksjKDdfsd9'
+    'user_secret'=>'ksjKDdfsd9',
+    'money_limit'=>1,
 ];
