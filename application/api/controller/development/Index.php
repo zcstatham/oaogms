@@ -6,7 +6,7 @@
  * Time: 21:04
  */
 
-namespace app\api\controller;
+namespace app\api\controller\development;
 
 use think\facade\Log;
 use app\common\exception\HttpException;
@@ -26,7 +26,6 @@ class Index extends Base
         $data = model('User')->login($this->params['aid'],$this->params['mid'],$this->params['code']);
         if($data !== false){
             $token = $this->createToken($data['data']);
-            Log::record(['response_data'=>$data['info']]);
             return json($data['info'])->header([
                 'Cache-control' => 'no-cache,must-revalidate',
                 'Authorization'=>json_encode($token)

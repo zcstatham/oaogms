@@ -118,35 +118,44 @@
 </style>
 {/block}
 {block name="body"}
-<div class="content-inner">
-    <div class="content-inner chart-cont">
-        <div class="form-group">
-            <div class="selectgroup">
-                <label class="selectgroup-item">
-                    <input type="radio" name="dategroup" value="today" checked class="selectgroup-input">
-                    <span class="selectgroup-button">今天</span>
-                </label>
-                <label class="selectgroup-item">
-                    <input type="radio" name="dategroup" value="yesterday" class="selectgroup-input">
-                    <span class="selectgroup-button">昨天</span>
-                </label>
-                <label class="selectgroup-item">
-                    <input type="radio" name="dategroup" value="week" class="selectgroup-input">
-                    <span class="selectgroup-button">近七天</span>
-                </label>
-                <label class="selectgroup-item">
-                    <input type="radio" name="dategroup" value="month" class="selectgroup-input">
-                    <span class="selectgroup-button">近30天</span>
-                </label>
-            </div>
-        </div>
-
+<div class="content-inner  d-flex justify-content-between">
+    <div class="chart-cont">
         <!--***** CONTENT *****-->
         <div class="" id="report2">
-        <div class="invoice-title ">
-            <h5 class="h5">数据分析</h5>
+        <div class="invoice-title d-flex justify-content-between">
+            <h5 class="h5">数据分析<small class="ml-2">下次刷新：<span id="countdown"></span></small></h5>
+            {if session('user_auth.sid')<10}
+            <select class="custom-select mb-2 mr-sm-2 mb-sm-0" name="mini" id="mini">
+                {volist name="minis" id="item"}
+                <option value="{$item.id}" {if ($item.id eq $Request.get.id) or ($key==0)}selected{/if}>{$item.name}
+                </option>
+                {/volist}
+            </select>
+            {else/}
+            <input type="hidden"  name="mini" id="mini" value="9">
+            {/if}
         </div>
         <hr>
+        <div class="form-group">
+                <div class="selectgroup">
+                    <label class="selectgroup-item">
+                        <input type="radio" name="dategroup" value="today" checked class="selectgroup-input">
+                        <span class="selectgroup-button">今天</span>
+                    </label>
+                    <label class="selectgroup-item">
+                        <input type="radio" name="dategroup" value="yesterday" class="selectgroup-input">
+                        <span class="selectgroup-button">昨天</span>
+                    </label>
+                    <label class="selectgroup-item">
+                        <input type="radio" name="dategroup" value="week" class="selectgroup-input">
+                        <span class="selectgroup-button">近七天</span>
+                    </label>
+                    <label class="selectgroup-item">
+                        <input type="radio" name="dategroup" value="month" class="selectgroup-input">
+                        <span class="selectgroup-button">近30天</span>
+                    </label>
+                </div>
+        </div>
         <div class="row">
             <div class="col-md-6">
                 <div class="card card-c1">
@@ -207,17 +216,7 @@
                         <th>浏览广告次数</th>
                     </tr>
                     </thead>
-                    <tbody class="panel-heading">
-                    {volist name='list' id='item' key="index" }
-                    <tr>
-                        <td><a rel="nofollow" href="#" class="text-item d-flex">{$item.name}</a></td>
-                        <td><a rel="nofollow" href="#" class="text-item d-flex">{$item.nickname}</a></td>
-                        <td><a rel="nofollow" href="#" class="text-item d-flex">{$item.login.channel}</a></td>
-                        <td><a rel="nofollow" href="#" class="text-item d-flex">{$item.register.channel}</a></td>
-                        <td><a rel="nofollow" href="#" class="text-item d-flex">{$item.auth.channel}</a></td>
-                        <td><a rel="nofollow" href="#" class="text-item d-flex">{$item.browseAd.channel}</a></td>
-                    </tr>
-                    {/volist}
+                    <tbody class="panel-heading" id="tbody">
                     </tbody>
                 </table>
             </div>
@@ -228,81 +227,153 @@
 {block name="script"}
 <script src="__JS__/utils.js"></script>
 <script>
-    var chartbox = {
-        'login': document.getElementById("login").getContext('2d'),
-        'register': document.getElementById("register").getContext('2d'),
-        'auth': document.getElementById("auth").getContext('2d'),
-        'browseAd': document.getElementById("browseAd").getContext('2d')
-    };
-
-    var colorNames = Object.keys(window.chartColors);
-    var chartlists = [];
-    getCharts({id:1});
-    $('.selectgroup-button').on('click',function(e){
-        var id = $('#mini').val();
-        var date = $(this).prev('input').val();
-        var data = {
-            id: id?id:1,
-            dateType:date
+    $(function () {
+        var chartbox = {
+            'login': document.getElementById("login").getContext('2d'),
+            'register': document.getElementById("register").getContext('2d'),
+            'auth': document.getElementById("auth").getContext('2d'),
+            'browseAd': document.getElementById("browseAd").getContext('2d')
         };
-        getCharts(data);
-    });
-    $('#mini').change(function(){
-        var id = $(this).val();
-        getCharts({id:id});
-    });
+        var colorNames = Object.keys(window.chartColors);
 
-    function getCharts(data){
-        $.getJSON("{:url('admin/publice/channelData')}",data,function(charts){
-            $.each(charts,function (index,chart){
-                var config = {
-                    type: 'bar',
-                    data:{
-                        labels: chart.labels,
-                        datasets: []
-                    },
-                    options: {
-                        responsive: true,
-                        tooltips: {
-                            mode: 'index',
-                            intersect: false
-                        },
-                        scales: {
-                            xAxes: [{
-                                maxBarThickness: 60
-                            }],
-                            yAxes: [{
-                                ticks: {
-                                    min: 0
-                                }
-                            }]
+        var config = {
+            type: 'bar',
+            options: {
+                responsive: true,
+                tooltips: {
+                    mode: 'index',
+                    intersect: false
+                },
+                scales: {
+                    xAxes: [{
+                        maxBarThickness: 60
+                    }],
+                    yAxes: [{
+                        ticks: {
+                            min: 0
                         }
-                    }
-                };
-                $.each(chart.datasets,function(i,datas){
-                    var colorName = colorNames[config.data['datasets'].length % colorNames.length];
-                    var dsColor = window.chartColors[colorName];
-                    var data = {
-                        label: '',
-                        data: [],
-                        backgroundColor: dsColor,
-                        borderColor:dsColor,
-                        borderWidth: 1
-                    };
-                    $.each(datas.data,function(i,d) {
-                        data.label = d[1];
-                        data.data[0] = d[0];
-                    });
-                    config.data['datasets'].push(data)
-                });
-                if(!chartlists[index]){
-                    chartlists[index] = new Chart(chartbox[index], config)
-                }else {
-                    chartlists[index].data = config.data;
-                    chartlists[index].update();
+                    }]
                 }
-            });
+            }
+        };
+        var chartlists = [];
+        var timer=null;
+
+        var $mini = $('#mini'),
+            $datebtn = $('.selectgroup-button'),
+            $dategroup = $('dategroup'),
+            $tbody = $('#tbody'),
+            $countdown = $('#countdown');
+
+        var currentId = $mini.val();
+        var currentDate = $dategroup.val();
+
+        getCharts({id: currentId, granularity: currentDate});
+        getTbody({id: currentId});
+
+        $datebtn.on('click', function (e) {
+            var id = $mini.val();
+            var date = $(this).prev('input').val();
+            var data = {
+                id: id ? id : 1,
+                granularity: date
+            };
+            getTbody(data);
+            getCharts(data);
         });
-    }
+
+        $mini.change(function () {
+            currentId = $(this).val();
+            getTbody({id: currentId});
+            getCharts({id: currentId, granularity: currentDate});
+        });
+
+        setInterval(function () {
+            getTbody({id: currentId});
+            getCharts({id: currentId, granularity: currentDate});
+        }, 1000 * 60 * 2);
+
+        resetTime();
+        function resetTime(){
+            var t = 60 * 2;
+            var m = 0;
+            var s = 0;
+            m = Math.floor(t / 60 % 60);
+            m < 10 && (m = '0' + m);
+            s = Math.floor(t % 60);
+            function countDown(){
+                s--;
+                s<10&&(s='0'+s);
+                if(s.length>=3){
+                    s=59;
+                    m="0"+(Number(m)-1);
+                }
+                if(m.length>=3){
+                    m='00';
+                    s='00';
+                    clearInterval(timer);
+                    Promise.all([ getTbody({id: currentId}),getCharts({id: currentId, granularity: currentDate})]).then(function(){
+                        m = Math.floor(t / 60 % 60);
+                        s = 0;
+                        timer=setInterval(countDown,1000);
+                    });
+                }
+                $countdown.html(m+':'+s);
+            }
+            timer=setInterval(countDown,1000);
+        }
+
+        function getCharts(data) {
+            return new Promise(function(resolve, reject){
+                $.getJSON("{:url('admin/publice/channelChartData')}", data, function (charts) {
+                    $.each(charts, function (index, chart) {
+                        var data = {
+                            labels: chart.labels,
+                            datasets: []
+                        };
+                        $.each(chart.datasets,function(i,d) {
+                            var colorName = colorNames[i % colorNames.length];
+                            var dataItem = {
+                                label: d[1],
+                                backgroundColor: window.chartColors[colorName],
+                                borderColor: window.chartColors[colorName],
+                                borderWidth: 1,
+                                data: [d[0]]
+                            };
+                            data['datasets'].push(dataItem);
+                        });
+                        config.data = data;
+                        if (!chartlists[index]) {
+                            chartlists[index] = new Chart(chartbox[index], $.extend({}, config))
+                        } else {
+                            chartlists[index].data = data;
+                            chartlists[index].update();
+                        }
+                    });
+                    resolve('200 OK');
+                });
+            });
+        }
+
+        function getTbody(data) {
+            return new Promise(function(resolve, reject){
+                $.getJSON("{:url('admin/publice/channeldata')}", data, function (trs) {
+                    var html = '';
+                    $.each(trs, function (index, tr) {
+                        html += '<tr>' +
+                            '        <td><a rel="nofollow" href="#" class="text-item d-flex">'+tr.name+'</a></td>' +
+                            '        <td><a rel="nofollow" href="#" class="text-item d-flex">'+tr.nickname+'</a></td>' +
+                            '        <td><a rel="nofollow" href="#" class="text-item d-flex">'+tr.login.channel+'</a></td>' +
+                            '        <td><a rel="nofollow" href="#" class="text-item d-flex">'+tr.register.channel+'</a></td>' +
+                            '        <td><a rel="nofollow" href="#" class="text-item d-flex">'+tr.auth.channel+'</a></td>' +
+                            '        <td><a rel="nofollow" href="#" class="text-item d-flex">'+tr.browseAd.channel+'</a></td>' +
+                            '    </tr>';
+                    });
+                    $tbody.html(html);
+                    resolve('200 OK');
+                });
+            });
+        }
+    });
 </script>
 {/block}

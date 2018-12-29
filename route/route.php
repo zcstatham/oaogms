@@ -15,31 +15,36 @@
 //
 use think\facade\Route;
 
+//api接口版本路由配置
+//Route::rule(':version/apiver/:id','api/:version.Apiver/read');
+
 Route::domain('api',array(
-    'log/lg'                => 'api/index/login',
-    'log/ah'                => 'api/index/authed',
-    'log/ad'                => 'api/index/browsead',
+    //production.0 版本路由
+    'log/lg'                     => 'api/production.index/login',
+    'log/ah'                     => 'api/production.index/authed',
+    'log/ad'                     => 'api/production.index/browsead',
+
+    //v2.0 版本路由
+    'development/'                     => 'api/development.index/index',
+    'development/login'                => 'api/development.index/login',
 ));
 
-Route::domain('api',array(
-    'orders/transfers'   => 'api/orders/transfers',
-    'orders/recharge'   => 'api/orders/recharge',
-    'orders/getbalance'   => 'api/orders/getbalance',
-    'orders/pay'   => 'api/orders/pay',
-    'orders/refund'   => 'api/orders/refund',
-    'orders/reward'   => 'api/orders/reward',
-))->middleware('Check');
+Route::group(['method'=>'post','middleware'=>'Check','domain'=>'api'],array(
+    'development/log/visited'   => 'api/development.log/visited',
+    'development/log/browsead'   => 'api/development.log/browsead',
 
-Route::domain('api',array(
-    '/'                     => 'api/index/index',
-    '/login'                => 'api/index/login',
-    '/refresh'              => 'api/index/refresh',
+    'development/orders/transfers'   => 'api/development.orders/transfers',
+    'development/orders/recharge'   => 'api/development.orders/recharge',
+    'development/orders/getbalance'   => 'api/development.orders/getbalance',
+    'development/orders/pay'   => 'api/development.orders/pay',
+    'development/orders/refund'   => 'api/development.orders/refund',
+    'development/orders/reward'   => 'api/development.orders/reward',
 ));
 
 
-Route::domain('admin',array(
+Route::domain('oaogms',array(
     '/'               => 'admin/index/index',
-    '/clear'          => 'admin/index/clear',
+    '/clear'               => 'admin/index/clear',
 
     'publice/index'   => 'admin/publice/index',
     'publice/own'     => 'admin/publice/own',

@@ -6,7 +6,7 @@
  * Time: 21:04
  */
 
-namespace app\api\controller;
+namespace app\api\controller\development;
 
 
 use app\common\exception\OrderException;

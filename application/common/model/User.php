@@ -52,7 +52,6 @@ class User extends Base
         if (!isset($wxInfo['session_key'])) {
             return false;
         }
-        Log::write($wxInfo);
         //检查用户是否注册过其他游戏
         $uid = $this->field('uid')->where('openid', $wxInfo['openid'])->find();
         $uid = $uid['uid'];
@@ -66,6 +65,7 @@ class User extends Base
             'Okey' => encrypt($wxInfo['openid'], $uid . config('siteinfo.mini_salt')),
             'Skey' => encrypt($wxInfo['session_key'], $uid . config('siteinfo.mini_salt'))
         );
+        //用户存在，当前游戏未注册
         if ($uid && !($uInfo = db('user_extend')
                 ->field('money,data')
                 ->where(array(['uid', '=', $uid], ['mid', '=', $mid]))
@@ -78,41 +78,47 @@ class User extends Base
                 'reg_ip' => get_client_ip(),
                 'last_login_ip' => get_client_ip(),
             ));
+            //小程序 统计 ——register
+            action('api/v2.Log/save', 'register');
+
+        //用户不存在
         } else if (!$uid && !$uInfo) {
-                $now = date('Y-m-d H:i:s', time());
-                Db::startTrans();
-                try {
-                    $uid = db('user')->insertGetId([
-                        'openid' => $wxInfo['openid'],
-                        'create_timestamp' => $now
-                    ]);
-                    db('user_extend')->insert(array(
-                        'uid' => $uid,
-                        'mid' => $mid,
-                        'reg_ip' => get_client_ip(),
-                        'last_login_ip' => get_client_ip(),
-                        'last_login_timestamp' => $now,
-                        'create_timestamp' => $now
-                    ));
-                    db('mini_log')->insert(array(
-                        'type' => 'register',
-                        'uid' => $uid,
-                        'action_ip' => get_client_ip(),
-                        'aid' => $aid,
-                        'mid' => $mid,
-                        'create_timestamp' => $now
-                    ));
-                    Db::commit();
-                } catch (\Exception $e) {
-                    Db::rollback();
-                    throw new BaseException();
-                }
-            } else {
-                $info = array(
-                    'money' => $uInfo['money'],
-                    'data' => json_decode($uInfo['money']),
-                );
+            $now = date('Y-m-d H:i:s', time());
+            Db::startTrans();
+            try {
+                $uid = db('user')->insertGetId([
+                    'openid' => $wxInfo['openid'],
+                    'create_timestamp' => $now
+                ]);
+                db('user_extend')->insert(array(
+                    'uid' => $uid,
+                    'mid' => $mid,
+                    'money' => 0,
+                    'reg_ip' => get_client_ip(),
+                    'last_login_ip' => get_client_ip(),
+                ));
+                //小程序 统计 ——register
+                db('mini_log')->insert(array(
+                    'type' => 'register',
+                    'uid' => $uid,
+                    'action_ip' => get_client_ip(),
+                    'aid' => $aid,
+                    'mid' => $mid,
+                    'create_timestamp' => $now
+                ));
+                Db::commit();
+            } catch (\Exception $e) {
+                Db::rollback();
+                throw new BaseException();
             }
+
+        //用户已注册
+        } else {
+            $info = array(
+                'money' => $uInfo['money'],
+                'data' => json_decode($uInfo['money']),
+            );
+        }
         return array(
             'data' => $data,
             'info' => $info
@@ -126,7 +132,6 @@ class User extends Base
             'mid' => $info['mid'],
         ];
         $sinfo = db('user_extend')->field('status')->where($emap)->find();
-        Log::write(['info' => $info, 'sql' => $this->getLastSql(), 'status' => $sinfo['status'], 'emap' => $emap]);
         $data = array(
             'nickname' => $info['userinfo']['nickName'],
             'avator' => $info['userinfo']['avatarUrl'],
@@ -141,6 +146,9 @@ class User extends Base
                 ->data(['status' => 1])
                 ->where($emap)
                 ->update();
+
+            //小程序 统计 ——auth
+            action('api/v2.Log/save','auth');
             return 'newAuth';
         } else {
             return 'updata';

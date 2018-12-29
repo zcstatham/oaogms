@@ -58,7 +58,7 @@ class User extends Base
         if ($this->request->isPost()) {
             $data = $this->request->param();
             //创建注册用户
-            $valid = $this->validate($data,'app\admin\validate\User');
+            $valid = $this->validate($data,'User');
             if($valid!== true){
                 $this->error('验证失败：'.$valid);
             }

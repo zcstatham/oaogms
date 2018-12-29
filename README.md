@@ -219,15 +219,7 @@ CREATE TABLE `oao_user_extend` (
 ) ENGINE=InnoDB AUTO_INCREMENT=34 DEFAULT CHARSET=utf8 ROW_FORMAT=DYNAMIC COMMENT='用户小程序关系';
 
 ~~~
-## 待优化
+V1.0.1
+===============
 
-> 数据存储
-+ 可采用 cache + redis + mysql 数据存储
-+ 日志按日期拆表统计
-+ 采用存储过程进行日志统计
-
-> 定时脚本
-+ 创建脚本，删除过期日志表
-
-> 小程序
-+ 完善用户认证
++ 修复渠道分析模块图标显示问题

@@ -7,6 +7,7 @@
  */
 
 namespace app\admin\controller;
+
 use think\Db;
 use think\facade\Log;
 
@@ -22,13 +23,14 @@ class Publice extends Base
      * @param int $id
      * @return mixed
      */
-    public function index($id = 1){
-        $list = model('Mini')->field('mid,name')->where('status','=',1)->all();
-        $map[] = ['create_timestamp','>=',date('Y-m-d 00:00:00',time())];
-        $map[] = ['mid','=',$id];
+    public function index($id = 1)
+    {
+        $list = model('Mini')->field('mid,name')->where('status', '=', 1)->all();
+        $map[] = ['create_timestamp', '>=', date('Y-m-d 00:00:00', time())];
+        $map[] = ['mid', '=', $id];
         $data = array(
-            'minis'=> $list,
-            'cards'=> profile($map)
+            'minis' => $list,
+            'cards' => profile($map)
         );
         $this->assign($data);
         return $this->fetch('publice/report');
@@ -39,8 +41,11 @@ class Publice extends Base
      * @param int $id
      * @return mixed
      */
-    public function channel($id = 1,$dateType='today'){
-        $this->assign('list',$this->getChannelData($id = 1,$dateType='today'));
+    public function channel()
+    {
+        $this->assign('minis', model('Mini')
+            ->field('mid,name')
+            ->where('status', '=', 1)->all());
         return $this->fetch();
     }
 
@@ -50,114 +55,132 @@ class Publice extends Base
      * @param string $dateType
      * @return \think\response\Json
      */
-    public function channelData($id = 1,$dateType='today'){
-        return json($this->getActiveChartData($id,$dateType));
+    public function channelData($id = 1, $granularity = 'today')
+    {
+        return json($this->getChannelData($id, $granularity));
     }
 
-    public function getChannelData($id = 1,$granularity='today'){
+    /**
+     * @title 获取渠道列表信息
+     * @param int $id
+     * @param string $granularity
+     * @return \think\response\Json
+     */
+    public function channelChartData($id = 1, $granularity = 'today')
+    {
+        return json($this->getActiveChartData($id, $granularity));
+    }
+
+    public function getChannelData($id = 1, $granularity = 'today')
+    {
         $dateformat = getDateMap($granularity);
         $sid = session('user_auth.sid');
-        $map[] = $sid>10 ?['SysAdmin.sid','=',$sid]:['SysAdmin.sid','>',10];
-        $list = Db::view('SysAdmin','sid,nickname')
-            ->view('ChannelActive','aid,mid,name','SysAdmin.sid=ChannelActive.sid')
+        $map[] = $sid > 10 ? ['SysAdmin.sid', '=', $sid] : ['SysAdmin.sid', '>', 10];
+        $list = Db::view('SysAdmin', 'sid,nickname')
+            ->view('ChannelActive', 'aid,mid,name', 'SysAdmin.sid=ChannelActive.sid')
             ->where($map)->select();
-        foreach ($list as &$item){
+        foreach ($list as &$item) {
             $pmap = array(
                 $dateformat[0],
-                ['aid','=',$item['aid']]
+                ['aid', '=', $item['aid']],
+                ['mid', '=', $id]
             );
             $profile = profile($pmap);
-            $item = array_merge($item,$profile);
+            $item = array_merge($item, $profile);
         }
         return $list;
     }
 
-    /**
-     * 获取渠道统计
-     * @param $id * 小程序id
-     * @param $dateType * 统计区间
-     * @param $type * 统计类型
-     * @param null $sid * 渠道id
-     */
-    public function getActiveChartData($id,$dateType){
+    public function getActiveChartData($id, $dateType)
+    {
+        $smap = [];
         $sid = session('user_auth.sid');
-        if($sid > 10){
-            $aid = db('channel_active')->field('aid')->where('sid',$sid)->select();
-            $map[] = ['log.aid','in',$aid[0]];
+        if ($sid > 10) {
+            $aid = db('channel_active')->field('aid')->where('sid', $sid)->select();
+            $map[] = ['log.aid', 'in', $aid[0]];
+            $smap = [['active.aid', 'in', $aid[0]]];
         }
         $dateformat = getDateMap($dateType);
         $dateformat[0][0] = 'log.create_timestamp';
         $map[] = $dateformat[0];
         $charts = config('siteinfo.charts');
-        foreach ($charts as $chartname=>$chartlabel) {
-            $$chartname  = Db::view('mini_log log',
-                ['type', 'remark','aid',
-                    'IFNULL(COUNT(log.id),0)' => 'count'])
-                ->view('channel_active active','name','log.aid=active.aid')
-                ->view('mini','mid','mini.mid=active.mid')
-                ->view('sys_admin admin','nickname','admin.sid=active.sid')
+        foreach ($charts as $chartname => $chartlabel) {
+            $subsql = db('mini_log')
+                ->alias('log')
+                ->field('type,aid,IFNULL(COUNT(id), 0) AS count')
                 ->where($map)
-                ->where('log.mid','=',$id)
-                ->where('log.type',$chartname)
-                ->group('log.aid,log.type')
+                ->where('mid', '=', $id)
+                ->where('type', $chartname)
+                ->group('aid')->buildSql();
+
+            $$chartname = db('channel_active active')
+                ->field("active.aid,active.name 'aname',mini.name 'mname',admin.nickname,IFNULL(b.type,'$chartname') type,IFNULL(b.count,0) count")
+                ->join('mini','mini.mid=active.mid')
+                ->join('sys_admin admin','admin.sid=active.sid')
+                ->join([$subsql=> 'b'],'b.aid = active.aid','LEFT')
+                ->where($smap)
+                ->where('active.status',1)
                 ->select();
             $data[$chartname] = $this->formChannelChart($$chartname);
         }
         return $data;
     }
 
-    public function chart($id=1,$granularity='today'){
-        $data = $this->getChartData($id,$granularity);
+    public function chart($id = 1, $granularity = 'today')
+    {
+        $data = $this->getChartData($id, $granularity);
         return json($data);
     }
 
-    public function card($id,$granularity='today'){
+    public function card($id, $granularity = 'today')
+    {
         $dateformat = getDateMap($granularity);
         $map[] = $dateformat[0];
-        $map[]=['mid','=',$id];
+        $map[] = ['mid', '=', $id];
         $data = profile($map);
         return json($data);
     }
 
-    public function getChartData($id,$dateType,$map=[]){
+    public function getChartData($id, $dateType, $map = [])
+    {
         $dateformat = getDateMap($dateType);
         $timeFormat = $dateformat[1];
-        $map[] = ['mid','=',$id];
+        $map[] = ['mid', '=', $id];
         $map[] = $dateformat[0];
-        $subsqlmap[] = ['mid','=',$id];
+        $subsqlmap[] = ['mid', '=', $id];
         $calendarmap = $dateformat[0];
-        $calendarmap[0]='date';
+        $calendarmap[0] = 'date';
         $field = ['aid',
             'type', 'remark',
             'IFNULL(COUNT(*),0)' => 'count',
             'DATE_FORMAT( create_timestamp, "' . $timeFormat . '")' => 'date'];
-        $group =  'aid,type,date';
+        $group = 'aid,type,date';
         $charts = config('siteinfo.charts');
-        foreach ($charts as $chartname=>$chartlabel) {
-            if($dateType == 'today' || $dateType == 'yesterday'){
-                for($i = 0; $i < 24; $i++){
-                    $d = str_pad($i,2,"0",STR_PAD_LEFT);
-                    $union[]= "SELECT 0,'$chartname','',0,'$d:00:00'";
-                    $union[]= "SELECT 1,'$chartname','',0,'$d:00:00'";
+        foreach ($charts as $chartname => $chartlabel) {
+            if ($dateType == 'today' || $dateType == 'yesterday') {
+                for ($i = 0; $i < 24; $i++) {
+                    $d = str_pad($i, 2, "0", STR_PAD_LEFT);
+                    $union[] = "SELECT 0,'$chartname','',0,'$d:00:00'";
+                    $union[] = "SELECT 1,'$chartname','',0,'$d:00:00'";
                 }
                 $subsql = db('mini_log')
                     ->where($map)
-                    ->where('type',$chartname)
+                    ->where('type', $chartname)
                     ->field($field)
                     ->group($group)
                     ->union($union)
                     ->buildSql();
-                $$chartname = Db::query('SELECT * FROM'.$subsql.'AS d GROUP BY d.date,d.aid ORDER BY d.date');
-            }else {
-                $subsql  = db('mini_log')
+                $$chartname = Db::query('SELECT * FROM' . $subsql . 'AS d GROUP BY d.date,d.aid ORDER BY d.date');
+            } else {
+                $subsql = db('mini_log')
                     ->where($subsqlmap)
-                    ->where('type',$chartname)
+                    ->where('type', $chartname)
                     ->field($field)
                     ->group($group)
                     ->buildSql();
                 $calendar = db('calendar')->where([$calendarmap])->buildSql();
-                Log::write([$calendar,$subsql]);
-                $$chartname = Db::query('SELECT IFNULL(s.aid,0) as aid,IFNULL(s.remark,\'\') as remark,IFNULL(s.count,0) as count,c.date FROM'.$calendar.'AS c LEFT JOIN'.$subsql.'AS s on s.date=c.date GROUP BY s.date,s.aid ORDER BY s.date');
+                Log::write([$calendar, $subsql]);
+                $$chartname = Db::query('SELECT IFNULL(s.aid,0) as aid,IFNULL(s.remark,\'\') as remark,IFNULL(s.count,0) as count,c.date FROM' . $calendar . 'AS c LEFT JOIN' . $subsql . 'AS s on s.date=c.date GROUP BY s.date,s.aid ORDER BY s.date');
             }
 
             $data[$chartname] = $this->formChart($$chartname);
@@ -168,41 +191,41 @@ class Publice extends Base
     private function formChart($list)
     {
         $data = array(
-            'labels'=>[],
-            'datasets'=>array(
+            'labels' => [],
+            'datasets' => array(
                 array(
-                    'data'=>[],
-                    'label'=>'oao',
-                    'borderColor'=>'#3e95cd',
-                    'fill'=>false,
+                    'data' => [],
+                    'label' => 'oao',
+                    'borderColor' => '#3e95cd',
+                    'fill' => false,
                 ),
                 array(
-                    'data'=>[],
-                    'label'=>'渠道',
-                    'borderColor'=>'#8e5ea2',
-                    'fill'=>false,
+                    'data' => [],
+                    'label' => '渠道',
+                    'borderColor' => '#8e5ea2',
+                    'fill' => false,
                 ),
                 array(
-                    'data'=>[],
-                    'label'=>'总计',
-                    'borderColor'=>'#28a745',
-                    'fill'=>false,
+                    'data' => [],
+                    'label' => '总计',
+                    'borderColor' => '#28a745',
+                    'fill' => false,
                 )
             ),
         );
-        foreach ($list as $item){
-            if(!in_array($item['date'], $data['labels'])){
+        foreach ($list as $item) {
+            if (!in_array($item['date'], $data['labels'])) {
                 $data['labels'][] = $item['date'];
                 $data['datasets'][2]['data'][$item['date']] = 0;
             }
-            if($item['aid'] == 0){
+            if ($item['aid'] == 0) {
                 $data['datasets'][0]['data'][$item['date']] = $item['count'];
-            }else{
+            } else {
                 $data['datasets'][1]['data'][$item['date']] = $item['count'];
             }
             $data['datasets'][2]['data'][$item['date']] += $item['count'];
         }
-        foreach ($data['datasets'] as &$v){
+        foreach ($data['datasets'] as &$v) {
             $v['data'] = array_values($v['data']);
         }
         return $data;
@@ -211,23 +234,19 @@ class Publice extends Base
     private function formChannelChart($list)
     {
         $data = array(
-            'labels'=>[],
-            'datasets'=>array(
-            )
+            'labels' => [],
+            'datasets' => array()
         );
         foreach ($list as $item) {
-            if(!in_array($item['nickname'], $data['labels'])){
+            if (!in_array($item['nickname'], $data['labels'])) {
                 $data['labels'][$item['aid']] = $item['nickname'];
             }
-            if($item['aid'] != 0){
-                $data['datasets'][$item['aid']]['data'][] = [$item['count'],$item['name']];
+            if ($item['aid'] != 0) {
+                $data['datasets'][$item['aid']] = [$item['count'], $item['aname']];
             }
         }
         $data['labels'] = array_values($data['labels']);
-        foreach ($data['datasets'] as &$v){
-            $v['data'] = array_values($v['data']);
-        }
-
+        $data['datasets'] = array_values($data['datasets']);
         return $data;
     }
 }

@@ -6,7 +6,7 @@
  * Time: 19:19
  */
 
-namespace app\api\controller;
+namespace app\api\controller\development;
 
 use app\common\exception\HttpException;
 use think\Controller;
